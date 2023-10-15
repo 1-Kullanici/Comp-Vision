@@ -203,6 +203,14 @@ class MainWindow(QMainWindow):
         tempImg = self.connectFunc[function](self.cv2img, self.size, **kwarg)
         self.outputImage = self.convert2qPixmap(tempImg, self.size)
         self.updateOutputImage(self.outputImage)
+        self.resetParameters() # Reset the input parameters after applying the transformation
+        
+
+    def resetParameters(self):
+        self.val_x.setValue(0)
+        self.val_y.setValue(0)
+        self.val_s.setValue(1)
+        self.val_r.setValue(0)
 
 
     def convert2qPixmap(self, imgArray, size):
