@@ -44,8 +44,7 @@ class MainWindow(QMainWindow):
         angle = 0
         
 
-        # Set main window's properties
-        self.windowTitle = "Image Manipulation Tool by Ibrahim Furkan Tezcan"
+        # Create a container widget
         widget = QWidget()
 
         # Input Image Labels/Wigdets
