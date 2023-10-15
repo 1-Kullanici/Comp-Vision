@@ -16,6 +16,9 @@ from PyQt6.QtWidgets import (
     QRadioButton,
     QSlider,
     QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QFormLayout,
     QWidget,
 )
 
@@ -35,6 +38,8 @@ class MainWindow(QMainWindow):
         ty = 0
         scale = 1
         angle = 0
+        
+        path = "No image is loaded!"
 
         # Set main window's properties
 
@@ -51,28 +56,76 @@ class MainWindow(QMainWindow):
 
         widget = QWidget()
 
+        # Input Image Labels/Wigdets
         inputImgFigTitle = QLabel("Input Image")
         inputImgFigTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         inputImgFig = QLabel()
         inputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
         inputImgFig.setPixmap(inputImage)
         
+        # Output Image Labels/Wigdets
         outputImgFigTitle = QLabel("Output Image")
         outputImgFigTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         outputImgFig = QLabel()
         outputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
         outputImgFig.setPixmap(outputImage)
 
-        # for w in widgets:
-        #     layout.addWidget(w())
-        layout = QVBoxLayout()
-        layout.addWidget(inputImgFigTitle)
-        layout.addStretch()
-        layout.addWidget(inputImgFig)
-        layout.addStretch()
-        layout.addWidget(outputImgFigTitle)
-        layout.addStretch()
-        layout.addWidget(outputImgFig)
+        # Label/Widget for image manipulaton tools
+        Browse = QPushButton("...")
+        imName = QLabel()
+        imName.setText("{}".format(path))
+        imName.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        Move_x = QPushButton("Move on x axis")
+        val_x  = QDoubleSpinBox()
+        val_x.setSuffix(" px")
+        val_x.setMaximum(255)
+        val_x.setMinimum(-255)
+        val_x.setValue(tx)
+        print(tx)
+
+        Move_y = QPushButton("Move on y axis")
+        val_y  = QDoubleSpinBox()
+        val_y.setSuffix(" px")
+        val_y.setValue(ty)
+        val_y.setMaximum(255)
+        val_y.setMinimum(-255)
+        print(ty)
+
+        Scale  = QPushButton("Scale by factor")
+        val_s  = QDoubleSpinBox()
+        val_s.setValue(scale)
+        val_s.setMaximum(255)
+        val_s.setMinimum(-255)
+        print(scale)
+
+        Rotate = QPushButton("Rotate by angle")
+        val_r  = QDoubleSpinBox()
+        val_r.setSuffix(" deg")
+        val_r.setMaximum(360)
+        val_r.setMinimum(-360)
+        val_r.setValue(angle)
+        print(angle)
+
+        # Place widgets on the window
+        layout = QGridLayout()
+        layout.addWidget(inputImgFigTitle, 0, 0)
+        layout.addWidget(inputImgFig, 1, 0, 8, 1)
+
+        layout.addWidget(outputImgFigTitle, 0, 1)
+        layout.addWidget(outputImgFig, 1, 1, 8, 1)
+
+        layout.addWidget(Browse, 0, 2, 1, 1)
+        layout.addWidget(imName, 0, 3, 1, 3)
+        layout.addWidget(Move_x, 1, 2, 1, 4)
+        layout.addWidget(val_x,  2, 2, 1, 4)
+        layout.addWidget(Move_y, 3, 2, 1, 4)
+        layout.addWidget(val_y,  4, 2, 1, 4)
+        layout.addWidget(Scale,  5, 2, 1, 4)
+        layout.addWidget(val_s,  6, 2, 1, 4)
+        layout.addWidget(Rotate, 7, 2, 1, 4)
+        layout.addWidget(val_r,  8, 2, 1, 4)
+
 
         # Set the layout on the application's window
         widget.setLayout(layout)
