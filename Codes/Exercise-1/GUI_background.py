@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QFormLayout,
     QWidget,
+    QFileDialog,
 )
 
 class MainWindow(QMainWindow):
@@ -29,6 +30,7 @@ class MainWindow(QMainWindow):
         # Define default parameters
         width = 256
         height = 256
+        defaultPath = "No image is loaded!"
         defaultImageArray = np.zeros((width,height,3), np.uint8)
         self.cv2img = defaultImageArray.copy()
 
@@ -41,7 +43,6 @@ class MainWindow(QMainWindow):
         scale = 1
         angle = 0
         
-        path = "No image is loaded!"
 
         # Set main window's properties
 
@@ -74,9 +75,11 @@ class MainWindow(QMainWindow):
 
         # Label/Widget for image manipulaton tools
         Browse = QPushButton("...")
-        imName = QLabel()
-        imName.setText("{}".format(path))
-        imName.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.imName = QLabel()
+        self.imName.setText("{}".format(defaultPath))
+        self.imName.setMinimumWidth(200)
+        self.imName.setMaximumWidth(250)
+        self.imName.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         Move_x = QPushButton("Move on x axis")
         self.val_x  = QDoubleSpinBox()
@@ -120,6 +123,10 @@ class MainWindow(QMainWindow):
         }
 
 
+        # Browse button functionality
+        Browse.clicked.connect(lambda: self.browseImage()) # Browse for image
+
+
         # Connect widgets to functions [FIXED] -Use lamda: when running a void function inside another function.-|--#TODO: Does not work as intended, fix it!#--
         Move_x.clicked.connect(lambda: self.updateParameters(Move_x)) # Save value of tx and apply transformation
         Move_y.clicked.connect(lambda: self.updateParameters(Move_y)) # Save value of ty and apply transformation
@@ -138,7 +145,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.outputImgFig, 1, 1, 8, 1)
 
         layout.addWidget(Browse, 0, 2, 1, 1)
-        layout.addWidget(imName, 0, 3, 1, 3)
+        layout.addWidget(self.imName, 0, 3, 1, 3)
         layout.addWidget(Move_x, 1, 2, 1, 4)
         layout.addWidget(self.val_x,  2, 2, 1, 4)
         layout.addWidget(Move_y, 3, 2, 1, 4)
@@ -160,15 +167,26 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
 
-    # TODO: Add a widget that will enable user to browse for image. Take its path and load it. 
-    # TODO: Add 4 different widgets that will enable user to transform the image. (Move x, Move y, Scale, Rotate)
-    # TODO: Add a button that will enable user apply those transformations and see the output image.
+    # [DONE] TODO: Add a widget that will enable user to browse for image. Take its path and load it. 
+    # [DONE] TODO: Add 4 different widgets that will enable user to transform the image. (Move x, Move y, Scale, Rotate)
+    # [DONE] TODO: Add a button that will enable user apply those transformations and see the output image.
+
+
+    def browseImage(self):
+        self.fileName, _ = QFileDialog.getOpenFileName(None, 'Open a File', '', 'Image files (*.jpg *.png *.jpeg *.bmp *.tif *.tiff)')
+        if self.fileName is not None:
+            self.updatePath(self.fileName)
+            self.loadInputImage(self.fileName)
 
 
     def loadInputImage(self, path):
         self.cv2img, self.size = iMan.loadIm(path)
         self.inputImg = self.convert2qPixmap(self.cv2img, self.size)
         self.updateInputImage(self.inputImg)
+
+
+    def updatePath(self, path):
+        self.imName.setText("{}".format(path))
 
 
     def updateInputImage(self, qImg):
@@ -202,4 +220,8 @@ class MainWindow(QMainWindow):
     def convert2qPixmap(self, imgArray, size):
         ConvImg = QImage(imgArray, size[1], size[0], QImage.Format.Format_RGB888) 
         return QPixmap(ConvImg)
+    
+
+# TODO: Fix the bug that causes groot to be warped, and others to change colors.
+# TODO: Add the functionality to put circles on the image and transform them as well.
     
