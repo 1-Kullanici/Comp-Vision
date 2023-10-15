@@ -45,18 +45,7 @@ class MainWindow(QMainWindow):
         
 
         # Set main window's properties
-
-        # widgets = [
-        #     QDial,
-        #     QDoubleSpinBox,
-        #     QLabel,
-        #     QProgressBar,
-        #     QPushButton,
-        #     QRadioButton,
-        #     QSlider,
-        # ]
-
-
+        self.windowTitle = "Image Manipulation Tool by Ibrahim Furkan Tezcan"
         widget = QWidget()
 
         # Input Image Labels/Wigdets
