@@ -35,7 +35,7 @@ class iManipulate:
 
 
 
-    def translateIm(img, size, tx=0, ty=0):
+    def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
 
         tM = np.float32([[1, 0, tx], [0, 1, ty]]) # Translation matrix
         newImg = cv.warpAffine(img, tM, (size[1], size[0]))
@@ -43,7 +43,7 @@ class iManipulate:
         return newImg
 
 
-    def scaleIm(img, size, scale_x=1, scale_y=1):
+    def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and angle
 
         tM = np.float32([[scale_x, 0, 0], [0, scale_y, 0]]) # Translation matrix
         newImg = cv.warpAffine(img, tM, (size[1], size[0]))
@@ -51,7 +51,7 @@ class iManipulate:
         return newImg
 
 
-    def rotateIm(img, size, angle=0):
+    def rotateIm(img, size, tx=0, ty=0, scale_x=0, scale_y=0, angle=0): # Don't use tx, ty, and scale
 
         tM = cv.getRotationMatrix2D((size[1]/2, size[0]/2), angle, 1)
         newImg = cv.warpAffine(img, tM, (size[1], size[0]))

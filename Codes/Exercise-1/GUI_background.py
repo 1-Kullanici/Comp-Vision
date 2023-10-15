@@ -30,9 +30,11 @@ class MainWindow(QMainWindow):
         width = 256
         height = 256
         defaultImageArray = np.zeros((width,height,3), np.uint8)
+        self.cv2img = defaultImageArray.copy()
 
-        inputImage  = self.convert2qPixmap(defaultImageArray, (height, width))
-        outputImage = self.convert2qPixmap(defaultImageArray, (height, width))
+        self.inputImage  = self.convert2qPixmap(defaultImageArray, (height, width))
+        self.outputImage = self.convert2qPixmap(defaultImageArray, (height, width))
+        self.size = (height, width)
 
         tx = 0
         ty = 0
@@ -59,16 +61,16 @@ class MainWindow(QMainWindow):
         # Input Image Labels/Wigdets
         inputImgFigTitle = QLabel("Input Image")
         inputImgFigTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        inputImgFig = QLabel()
-        inputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        inputImgFig.setPixmap(inputImage)
+        self.inputImgFig = QLabel()
+        self.inputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.inputImgFig.setPixmap(self.inputImage)
         
         # Output Image Labels/Wigdets
         outputImgFigTitle = QLabel("Output Image")
         outputImgFigTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        outputImgFig = QLabel()
-        outputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        outputImgFig.setPixmap(outputImage)
+        self.outputImgFig = QLabel()
+        self.outputImgFig.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.outputImgFig.setPixmap(self.outputImage)
 
         # Label/Widget for image manipulaton tools
         Browse = QPushButton("...")
@@ -77,54 +79,74 @@ class MainWindow(QMainWindow):
         imName.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         Move_x = QPushButton("Move on x axis")
-        val_x  = QDoubleSpinBox()
-        val_x.setSuffix(" px")
-        val_x.setMaximum(255)
-        val_x.setMinimum(-255)
-        val_x.setValue(tx)
-        print(tx)
+        self.val_x  = QDoubleSpinBox()
+        self.val_x.setSuffix(" px")
+        self.val_x.setMaximum(255)
+        self.val_x.setMinimum(-255)
+        # print(tx)
 
         Move_y = QPushButton("Move on y axis")
-        val_y  = QDoubleSpinBox()
-        val_y.setSuffix(" px")
-        val_y.setValue(ty)
-        val_y.setMaximum(255)
-        val_y.setMinimum(-255)
-        print(ty)
+        self.val_y  = QDoubleSpinBox()
+        self.val_y.setSuffix(" px")
+        self.val_y.setValue(ty)
+        self.val_y.setMaximum(255)
+        self.val_y.setMinimum(-255)
+        # print(ty)
 
         Scale  = QPushButton("Scale by factor")
-        val_s  = QDoubleSpinBox()
-        val_s.setValue(scale)
-        val_s.setMaximum(255)
-        val_s.setMinimum(-255)
-        print(scale)
+        self.val_s  = QDoubleSpinBox()
+        self.val_s.setValue(scale)
+        self.val_s.setMaximum(255)
+        self.val_s.setMinimum(-255)
+        # print(scale)
 
         Rotate = QPushButton("Rotate by angle")
-        val_r  = QDoubleSpinBox()
-        val_r.setSuffix(" deg")
-        val_r.setMaximum(360)
-        val_r.setMinimum(-360)
-        val_r.setValue(angle)
-        print(angle)
+        self.val_r  = QDoubleSpinBox()
+        self.val_r.setSuffix(" deg")
+        self.val_r.setMaximum(360)
+        self.val_r.setMinimum(-360)
+        self.val_r.setValue(angle)
+        # print(angle)
+
+
+        # Map widgets to functions
+        self.connectFunc = {
+
+            Move_x  : iMan.translateIm,
+            Move_y  : iMan.translateIm,
+            Scale   : iMan.scaleIm,
+            Rotate  : iMan.rotateIm,
+            
+        }
+
+
+        # Connect widgets to functions [FIXED] -Use lamda: when running a void function inside another function.-|--#TODO: Does not work as intended, fix it!#--
+        Move_x.clicked.connect(lambda: self.updateParameters(Move_x)) # Save value of tx and apply transformation
+        Move_y.clicked.connect(lambda: self.updateParameters(Move_y)) # Save value of ty and apply transformation
+        Scale.clicked.connect(lambda:  self.updateParameters(Scale))  # Save value of scale and apply transformation
+        Rotate.clicked.connect(lambda: self.updateParameters(Rotate)) # Save value of angle and apply transformation
+        print("---------START---------\nInitial parameters are: tx: ",
+               tx, " ty: ", ty, " scale: ", scale, " angle: ", angle)
+
 
         # Place widgets on the window
         layout = QGridLayout()
         layout.addWidget(inputImgFigTitle, 0, 0)
-        layout.addWidget(inputImgFig, 1, 0, 8, 1)
+        layout.addWidget(self.inputImgFig, 1, 0, 8, 1)
 
         layout.addWidget(outputImgFigTitle, 0, 1)
-        layout.addWidget(outputImgFig, 1, 1, 8, 1)
+        layout.addWidget(self.outputImgFig, 1, 1, 8, 1)
 
         layout.addWidget(Browse, 0, 2, 1, 1)
         layout.addWidget(imName, 0, 3, 1, 3)
         layout.addWidget(Move_x, 1, 2, 1, 4)
-        layout.addWidget(val_x,  2, 2, 1, 4)
+        layout.addWidget(self.val_x,  2, 2, 1, 4)
         layout.addWidget(Move_y, 3, 2, 1, 4)
-        layout.addWidget(val_y,  4, 2, 1, 4)
+        layout.addWidget(self.val_y,  4, 2, 1, 4)
         layout.addWidget(Scale,  5, 2, 1, 4)
-        layout.addWidget(val_s,  6, 2, 1, 4)
+        layout.addWidget(self.val_s,  6, 2, 1, 4)
         layout.addWidget(Rotate, 7, 2, 1, 4)
-        layout.addWidget(val_r,  8, 2, 1, 4)
+        layout.addWidget(self.val_r,  8, 2, 1, 4)
 
 
         # Set the layout on the application's window
@@ -144,9 +166,9 @@ class MainWindow(QMainWindow):
 
 
     def loadInputImage(self, path):
-        inputImg, size = iMan.loadIm(path)
-        inputImg = self.convert2qPixmap(inputImg, size)
-        self.updateInputImage(inputImg)
+        self.cv2img, self.size = iMan.loadIm(path)
+        self.inputImg = self.convert2qPixmap(self.cv2img, self.size)
+        self.updateInputImage(self.inputImg)
 
 
     def updateInputImage(self, qImg):
@@ -155,6 +177,26 @@ class MainWindow(QMainWindow):
 
     def updateOutputImage(self, qImg):
         self.outputImgFig.setPixmap(qImg)
+
+
+    def updateParameters(self, function: object):
+        kwarg = {
+
+            "tx"      : self.val_x.value(),
+            "ty"      : self.val_y.value(),
+            "scale_x" : self.val_s.value(),
+            "scale_y" : self.val_s.value(),
+            "angle"   : self.val_r.value(),
+
+        }
+
+        # Test if the variables are passed correctly
+        print("Updated parameters:")
+        print(kwarg)
+
+        tempImg = self.connectFunc[function](self.cv2img, self.size, **kwarg)
+        self.outputImage = self.convert2qPixmap(tempImg, self.size)
+        self.updateOutputImage(self.outputImage)
 
 
     def convert2qPixmap(self, imgArray, size):
