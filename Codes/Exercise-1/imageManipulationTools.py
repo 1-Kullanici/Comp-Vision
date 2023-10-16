@@ -97,6 +97,7 @@ class iManipulate:
         tM = np.float32([[scale_x * cosPart, -(scale_y * sinPart), tx * scale_x * cosPart - ty * scale_y * sinPart], 
                          [scale_x * sinPart, scale_y * cosPart,    tx * scale_x * sinPart + ty * scale_y * cosPart],
                          [0,                 0,                    1                                              ]])
+        
         new_point_ext = np.matmul(tM, point_ext)
         new_point = np.array([int(new_point_ext[0]), int(new_point_ext[1])])
         return new_point

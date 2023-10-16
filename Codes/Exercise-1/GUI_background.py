@@ -33,9 +33,11 @@ class MainWindow(QMainWindow):
         defaultPath = "No image is loaded!"
         defaultImageArray = np.zeros((width,height,3), np.uint8)
         self.cv2img = defaultImageArray.copy()
-
-        self.inputImage  = self.convert2qPixmap(defaultImageArray, (height, width))
-        self.outputImage = self.convert2qPixmap(defaultImageArray, (height, width))
+        
+        self.inputImage         = self.convert2qPixmap(defaultImageArray, (height, width))
+        self._defaultInputImage  = self.convert2qPixmap(defaultImageArray, (height, width))
+        self.outputImage        = self.convert2qPixmap(defaultImageArray, (height, width))
+        self._defaultOutputImage = self.convert2qPixmap(defaultImageArray, (height, width))
         self.size = (height, width)
 
         tx = 0
@@ -131,8 +133,9 @@ class MainWindow(QMainWindow):
         # print("---------START---------\nInitial parameters are: tx: ",
         #        tx, " ty: ", ty, " scale: ", scale, " angle: ", angle)
 
-        # Browse button functionality
-        Browse.clicked.connect(lambda: self.updatePath("This feature is under development!"))
+        # Browse button functionality (Temporary)
+        self.updatePath("Clear the canvas")
+        Browse.clicked.connect(lambda: self.clearImages()) # Clear the canvas
 
         # Transformation buttons functionality (For points)
         Move_x.clicked.connect(lambda: self.applyTransformation2points()) # Save value of tx and apply transformation
@@ -189,13 +192,13 @@ class MainWindow(QMainWindow):
     # # Import image from OpenCV (3rd party)
     # def loadInputImageFromCV(self, path:str) -> None:
     #     self.cv2img, self.size = iMan.loadIm(path)
-    #     self.inputImg = self.convert2qPixmap(self.cv2img, self.size)
-    #     self.updateInputImageFig(self.inputImg)
+    #     self.inputImage = self.convert2qPixmap(self.cv2img, self.size)
+    #     self.updateInputImageFig(self.inputImage)
     """"""
 
     def loadInputImage(self, path:str) -> None:
-        self.inputImg = QPixmap(path)
-        self.updateInputImageFig(self.inputImg)
+        self.inputImage = QPixmap(path)
+        self.updateInputImageFig(self.inputImage)
 
 
     def updatePath(self, path):
@@ -203,11 +206,11 @@ class MainWindow(QMainWindow):
 
 
     def updateInputImage(self, qImg):
-        self.inputImg = qImg
+        self.inputImage = qImg
 
 
     def updateOutputImage(self, qImg):
-        self.outputImg = qImg
+        self.outputImage = qImg
 
 
     def updateInputImageFig(self, qImg):
@@ -216,6 +219,36 @@ class MainWindow(QMainWindow):
 
     def updateOutputImageFig(self, qImg):
         self.outputImgFig.setPixmap(qImg)
+
+
+    def clearInputImageFig(self):
+        self.inputImgFig.clear()
+        self.updateInputImage(self._defaultInputImage)
+        self.updateInputImageFig(self.inputImage)
+
+
+    def clearOutputImageFig(self):
+        self.outputImgFig.clear()
+        self.updateOutputImage(self._defaultOutputImage)
+        self.updateOutputImageFig(self.outputImage)
+
+
+    def clearImages(self): # Clear the canvas - Works only once or twice, fix it!
+        # Clear point position memory
+        self.circles= []      # [((x0, y0), r0), ((x1, y1), r1), ...]
+        self.circles_Tr = []  # [((x0, y0), r0), ((x1, y1), r1), ...]
+        self.pointPos = []    # [(x0, y0), (x1, y1), ...]
+        # self.pointPos_Tr = [] # [(x0, y0), (x1, y1), ...]
+
+        # Clear the transformation parameters
+        self.resetParameters()
+
+        # Clear image modifications
+        self.clearInputImageFig()
+        self.clearOutputImageFig()
+
+        print("---------CLEARED---------")
+
 
     def updateParameters(self):
     # def updateParameters(self, function: object):
@@ -238,6 +271,7 @@ class MainWindow(QMainWindow):
         # self.updateOutputImageFig(self.outputImage)
         # self.resetParameters() # Reset the input parameters after applying the transformation
         """"""
+        print("Updated parameters are: ", kwarg)
         return kwarg
 
 
@@ -249,15 +283,21 @@ class MainWindow(QMainWindow):
 
 
     def applyTransformation2points(self):
+        # self.clearOutputImageFig() # Clear the output image - Does not work as intended, fix it!
         param =  self.updateParameters()
         color_Tr = (0, 255, 0, 127)
         for point in self.pointPos:
-            tempPointPos = tuple(iMan.manipulateP(point, **param))
-            self.circles_Tr.append((tempPointPos, self.circleRadius))
+            tempPos = tuple(iMan.manipulateP(point, **param))
+            tempPos_x = tempPos[0]
+            tempPos_y = tempPos[1]
+            # If the mouse click is inside the input image borders
+            if (tempPos_x > 12 and tempPos_x < 268) and (tempPos_y > 52 and tempPos_y < 308):
+                self.circles_Tr.append((tempPos, self.circleRadius))
         
-        print("Transformed points: ",self.circles_Tr)
+        print("Original points: ",    self.circles)
+        print("Transformed points: ", self.circles_Tr)
         self.draw_circles(self.outputImage, self.circles_Tr, color_Tr, output_Image=True)
-        self.updateOutputImageFig(self.outputImg)
+        self.updateOutputImageFig(self.outputImage)
         self.resetParameters() # Reset the input parameters after applying the transformation
 
 
@@ -288,7 +328,7 @@ class MainWindow(QMainWindow):
         if event.button() == Qt.MouseButton.LeftButton:
             tempPos_x = int(event.position().x())
             tempPos_y = int(event.position().y())
-            print(tempPos_x, tempPos_y)
+            # print("Clicked at the position: ", tempPos_x, tempPos_y)
             # If the mouse click is inside the input image borders
             if (tempPos_x > 12 and tempPos_x < 268) and (tempPos_y > 52 and tempPos_y < 308):
                 self.pointPos.append([tempPos_x, tempPos_y])
