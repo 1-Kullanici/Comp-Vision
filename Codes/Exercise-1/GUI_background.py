@@ -28,17 +28,18 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Define default parameters
-        width = 256
-        height = 256
+        global __width, __height, _defaultImageArray
+        __width = 256
+        __height = 256
+        # self.default_program_mode = "Drawing Mode! Click browse to load an image."
+        self.default_program_mode = "Drawing Mode! Click on the input image to palce a point." # When tihs changes, change the manipulation tool to iManCV or iManQT.
         defaultPath = "No image is loaded!"
-        defaultImageArray = np.zeros((width,height,3), np.uint8)
-        self.cv2img = defaultImageArray.copy()
-        
-        self.inputImage         = self.convert2qPixmap(defaultImageArray, (height, width))
-        self._defaultInputImage  = self.convert2qPixmap(defaultImageArray, (height, width))
-        self.outputImage        = self.convert2qPixmap(defaultImageArray, (height, width))
-        self._defaultOutputImage = self.convert2qPixmap(defaultImageArray, (height, width))
-        self.size = (height, width)
+        _defaultImageArray = np.zeros((__width,__height,3), np.uint8)
+        # self.cv2img = _defaultImageArray.copy()
+       
+        self.inputImage          = self.convert2qPixmap(_defaultImageArray, (__height, __width))
+        self.outputImage         = self.convert2qPixmap(_defaultImageArray, (__height, __width))
+        self.size = (__height, __width)
 
         tx = 0
         ty = 0
@@ -50,6 +51,11 @@ class MainWindow(QMainWindow):
         self.circles_Tr = []  # [((x0, y0), r0), ((x1, y1), r1), ...]
         self.pointPos = []    # [(x0, y0), (x1, y1), ...]
         # self.pointPos_Tr = [] # [(x0, y0), (x1, y1), ...]
+
+        # Define the coordinate error in the canvas (experimentally determined)
+        global __error_x, __error_y
+        __error_x = 12
+        __error_y = 52
 
 
         # Create a container widget
@@ -72,21 +78,24 @@ class MainWindow(QMainWindow):
         self.outputImgFig.setPixmap(self.outputImage)
 
         # Label/Widget for image manipulaton tools
-        Browse = QPushButton("...")
+        # Browse = QPushButton("...")
+        Browse = QPushButton("Clear!")
+        self.programMode = QLabel("{}".format(self.default_program_mode))
+        self.programMode.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.imName = QLabel()
         self.imName.setText("{}".format(defaultPath))
         self.imName.setMinimumWidth(200)
         self.imName.setMaximumWidth(250)
         self.imName.setAlignment(Qt.AlignmentFlag.AlignRight)
 
-        Move_x = QPushButton("Move on x axis")
+        Move_x = QLabel("Move on x axis")
         self.val_x  = QDoubleSpinBox()
         self.val_x.setSuffix(" px")
         self.val_x.setMaximum(1024)
         self.val_x.setMinimum(-1024)
         # print(tx)
 
-        Move_y = QPushButton("Move on y axis")
+        Move_y = QLabel("Move on y axis")
         self.val_y  = QDoubleSpinBox()
         self.val_y.setSuffix(" px")
         self.val_y.setValue(ty)
@@ -94,14 +103,14 @@ class MainWindow(QMainWindow):
         self.val_y.setMinimum(-1024)
         # print(ty)
 
-        Scale  = QPushButton("Scale by factor")
+        Scale  = QLabel("Scale by factor")
         self.val_s  = QDoubleSpinBox()
         self.val_s.setValue(scale)
         self.val_s.setMaximum(1024)
         self.val_s.setMinimum(-1024)
         # print(scale)
 
-        Rotate = QPushButton("Rotate by angle")
+        Rotate = QLabel("Rotate by angle")
         self.val_r  = QDoubleSpinBox()
         self.val_r.setSuffix(" deg")
         self.val_r.setMaximum(360)
@@ -109,39 +118,20 @@ class MainWindow(QMainWindow):
         self.val_r.setValue(angle)
         # print(angle)
 
-        """ Thing here, might be added in the next version. """
-        # # Map widgets to functions
-        # self.connectFunc = {
+        # Transform button (Should take all the parameters given and apply transformation)
+        Transform = QPushButton("Transform!")
 
-        #     Move_x  : iManCv.translateIm,
-        #     Move_y  : iManCv.translateIm,
-        #     Scale   : iManCv.scaleIm,
-        #     Rotate  : iManCv.rotateIm,
-            
-        # }
-        """"""
 
         """ Thing commented here, might be added in the next version. """
         # Browse button functionality
         # Browse.clicked.connect(lambda: self.browseImage()) # Browse for image
-        #
-        # # Connect widgets to functions [FIXED] -Use lamda: when running a void function inside another function.-|--#TODO: Does not work as intended, fix it!#--
-        # Move_x.clicked.connect(lambda: self.updateParameters(Move_x)) # Save value of tx and apply transformation
-        # Move_y.clicked.connect(lambda: self.updateParameters(Move_y)) # Save value of ty and apply transformation
-        # Scale.clicked.connect(lambda:  self.updateParameters(Scale))  # Save value of scale and apply transformation
-        # Rotate.clicked.connect(lambda: self.updateParameters(Rotate)) # Save value of angle and apply transformation
-        # print("---------START---------\nInitial parameters are: tx: ",
-        #        tx, " ty: ", ty, " scale: ", scale, " angle: ", angle)
 
         # Browse button functionality (Temporary)
-        self.updatePath("Clear the canvas")
+        self.updatePath("Clear the canvas") # Temporary, will be removed in the next version
         Browse.clicked.connect(lambda: self.clearImages()) # Clear the canvas
 
-        # Transformation buttons functionality (For points)
-        Move_x.clicked.connect(lambda: self.applyTransformation2points()) # Save value of tx and apply transformation
-        Move_y.clicked.connect(lambda: self.applyTransformation2points()) # Save value of ty and apply transformation
-        Scale.clicked.connect(lambda:  self.applyTransformation2points())  # Save value of scale and apply transformation
-        Rotate.clicked.connect(lambda: self.applyTransformation2points()) # Save value of angle and apply transformation
+        # Transformation button functionality (For points)
+        Transform.clicked.connect(lambda: self.applyTransformation2points()) # Save value of tx and apply transformation
         print("---------START---------\nInitial parameters are: tx: ",
                tx, " ty: ", ty, " scale: ", scale, " angle: ", angle)
         """"""
@@ -149,23 +139,25 @@ class MainWindow(QMainWindow):
 
         # Place widgets on the window
         layout = QGridLayout()
-        layout.addWidget(inputImgFigTitle, 0, 0)
-        layout.addWidget(self.inputImgFig, 1, 0, 8, 1)
+        layout.addWidget(inputImgFigTitle,   0, 0)
+        layout.addWidget(self.inputImgFig,   1, 0, 8, 1)
 
-        layout.addWidget(outputImgFigTitle, 0, 1)
-        layout.addWidget(self.outputImgFig, 1, 1, 8, 1)
+        layout.addWidget(outputImgFigTitle,  0, 1)
+        layout.addWidget(self.outputImgFig,  1, 1, 8, 1)
 
-        layout.addWidget(Browse, 0, 2, 1, 1)
-        layout.addWidget(self.imName, 0, 3, 1, 3)
-        layout.addWidget(Move_x, 1, 2, 1, 4)
-        layout.addWidget(self.val_x,  2, 2, 1, 4)
-        layout.addWidget(Move_y, 3, 2, 1, 4)
-        layout.addWidget(self.val_y,  4, 2, 1, 4)
-        layout.addWidget(Scale,  5, 2, 1, 4)
-        layout.addWidget(self.val_s,  6, 2, 1, 4)
-        layout.addWidget(Rotate, 7, 2, 1, 4)
-        layout.addWidget(self.val_r,  8, 2, 1, 4)
+        layout.addWidget(Browse,             0, 2, 1, 1)
+        layout.addWidget(self.imName,        0, 3, 1, 3)
+        layout.addWidget(self.programMode,   1, 2, 1, 4)
+        layout.addWidget(Move_x,             3, 2, 1, 2)
+        layout.addWidget(self.val_x,         4, 2, 1, 2)
+        layout.addWidget(Move_y,             3, 4, 1, 2)
+        layout.addWidget(self.val_y,         4, 4, 1, 2)
+        layout.addWidget(Scale,              5, 2, 1, 2)
+        layout.addWidget(self.val_s,         6, 2, 1, 2)
+        layout.addWidget(Rotate,             5, 4, 1, 2)
+        layout.addWidget(self.val_r,         6, 4, 1, 2)
 
+        layout.addWidget(Transform,          8, 2, 1, 4)
 
         # Set the layout on the application's window
         widget.setLayout(layout)
@@ -203,6 +195,7 @@ class MainWindow(QMainWindow):
 
     def updatePath(self, path):
         self.imName.setText("{}".format(path))
+        # self.programMode.setText("{}".format("Image Transformation Mode!"))
 
 
     def updateInputImage(self, qImg):
@@ -223,13 +216,15 @@ class MainWindow(QMainWindow):
 
     def clearInputImageFig(self):
         self.inputImgFig.clear()
-        self.updateInputImage(self._defaultInputImage)
+        _defaultInputImage  = self.convert2qPixmap(_defaultImageArray, (__height, __width))
+        self.updateInputImage(_defaultInputImage)
         self.updateInputImageFig(self.inputImage)
 
 
     def clearOutputImageFig(self):
         self.outputImgFig.clear()
-        self.updateOutputImage(self._defaultOutputImage)
+        _defaultOutputImage = self.convert2qPixmap(_defaultImageArray, (__height, __width))
+        self.updateOutputImage(_defaultOutputImage)
         self.updateOutputImageFig(self.outputImage)
 
 
@@ -251,7 +246,6 @@ class MainWindow(QMainWindow):
 
 
     def updateParameters(self):
-    # def updateParameters(self, function: object):
         kwarg = {
 
             "tx"      : self.val_x.value(),
@@ -261,9 +255,6 @@ class MainWindow(QMainWindow):
             "angle"   : self.val_r.value(),
 
         }
-        # Test if the variables are passed correctly
-        # print("Updated parameters:")
-        # print(kwarg)
 
         """ Thing here, might be added in the next version. """
         #tempImg = self.connectFunc[function](self.cv2img, self.size, **kwarg)
@@ -291,14 +282,14 @@ class MainWindow(QMainWindow):
             tempPos_x = tempPos[0]
             tempPos_y = tempPos[1]
             # If the mouse click is inside the input image borders
-            if (tempPos_x > 12 and tempPos_x < 268) and (tempPos_y > 52 and tempPos_y < 308):
+            if (tempPos_x > __error_x and tempPos_x < __width + __error_x) and (tempPos_y > __error_y and tempPos_y < __height + __error_y):
                 self.circles_Tr.append((tempPos, self.circleRadius))
         
         print("Original points: ",    self.circles)
         print("Transformed points: ", self.circles_Tr)
         self.draw_circles(self.outputImage, self.circles_Tr, color_Tr, output_Image=True)
         self.updateOutputImageFig(self.outputImage)
-        self.resetParameters() # Reset the input parameters after applying the transformation
+        # self.resetParameters() # Reset the input parameters after applying the transformation
 
 
     def convert2qPixmap(self, imgArray, size):
@@ -308,8 +299,7 @@ class MainWindow(QMainWindow):
 
     def draw_circles(self, img, circle_pos=None, color=(255, 0, 0, 127), output_Image = False):
         painter = QPainter(img)
-        # Error in the coordinates of placed circle 
-        # has been determined experimentally
+        # Error in the coordinates of placed circle has been determined experimentally
         err_x = 16
         err_y = 54
         for pos, radius in circle_pos:
@@ -330,7 +320,7 @@ class MainWindow(QMainWindow):
             tempPos_y = int(event.position().y())
             # print("Clicked at the position: ", tempPos_x, tempPos_y)
             # If the mouse click is inside the input image borders
-            if (tempPos_x > 12 and tempPos_x < 268) and (tempPos_y > 52 and tempPos_y < 308):
+            if (tempPos_x > __error_x and tempPos_x < __width + __error_x) and (tempPos_y > __error_y and tempPos_y < __height + __error_y):
                 self.pointPos.append([tempPos_x, tempPos_y])
                 # Add a circle to the list
                 self.circles.append(((tempPos_x, tempPos_y), self.circleRadius))  # (position, radius)

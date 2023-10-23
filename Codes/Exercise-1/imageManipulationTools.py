@@ -2,6 +2,56 @@ import argparse
 import cv2 as cv
 import numpy as np
 
+
+class iManipulate:
+    """
+        This class manipulates images and points using functions I wrote.
+    """
+    def __init__(self):
+        pass
+
+   
+    def manipulateP(point:tuple, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0) -> list: 
+        """
+            manipulateP(point, tx=0, ty=0, scale_x=1, scale_y=1, angle=0)
+            
+        Takes point coordinates and transformation parameters as input and returns the coordinate of the transformed point as list.
+        
+        Parameters:
+        --------------------------------
+        point: tuple
+        tx: float
+        ty: float
+        scale_x: float
+        scale_y: float
+        angle: float (in degrees)
+        """
+        angle_in_Radians = angle*np.pi/180
+        cosPart = np.cos(angle_in_Radians)
+        sinPart = np.sin(angle_in_Radians)
+        point_ext = np.array([point[0], point[1], 1])
+        # Translation matrix ([tanslate * scale * rotate])
+        tM = np.float32([[scale_x * cosPart, -(scale_y * sinPart), tx * scale_x * cosPart - ty * scale_y * sinPart], 
+                         [scale_x * sinPart, scale_y * cosPart,    tx * scale_x * sinPart + ty * scale_y * cosPart],
+                         [0,                 0,                    1                                              ]])
+        
+        new_point_ext = np.matmul(tM, point_ext)
+        new_point = np.array([int(new_point_ext[0]), int(new_point_ext[1])])
+        return new_point
+
+
+    def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
+        pass
+
+
+    def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use transform and angle
+        pass
+
+
+    def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
+        pass
+
+
 class iManipulateCv:
     """
         This class loads, shows, and manipulates images using OpenCV.
@@ -78,42 +128,6 @@ class iManipulateQt:
 
     def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
         pass
-
-
-class iManipulate:
-    """
-        This class manipulates images and points using functions I wrote.
-    """
-    def __init__(self):
-        pass
-
-    
-    def manipulateP(point, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): 
-
-        cosPart = np.cos(angle)
-        sinPart = np.sin(angle)
-        point_ext = np.array([point[0], point[1], 1])
-        # Translation matrix ([tanslate * scale * rotate])
-        tM = np.float32([[scale_x * cosPart, -(scale_y * sinPart), tx * scale_x * cosPart - ty * scale_y * sinPart], 
-                         [scale_x * sinPart, scale_y * cosPart,    tx * scale_x * sinPart + ty * scale_y * cosPart],
-                         [0,                 0,                    1                                              ]])
-        
-        new_point_ext = np.matmul(tM, point_ext)
-        new_point = np.array([int(new_point_ext[0]), int(new_point_ext[1])])
-        return new_point
-
-
-    def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
-        pass
-
-
-    def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use transform and angle
-        pass
-
-
-    def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
-        pass
-
 
 
 def main():
