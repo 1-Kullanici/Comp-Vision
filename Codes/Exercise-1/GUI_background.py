@@ -106,8 +106,8 @@ class MainWindow(QMainWindow):
         Scale  = QLabel("Scale by factor")
         self.val_s  = QDoubleSpinBox()
         self.val_s.setValue(scale)
-        self.val_s.setMaximum(1024)
-        self.val_s.setMinimum(-1024)
+        self.val_s.setMaximum(20)
+        self.val_s.setMinimum(-20)
         # print(scale)
 
         Rotate = QLabel("Rotate by angle")
@@ -216,6 +216,10 @@ class MainWindow(QMainWindow):
 
     def clearInputImageFig(self):
         self.inputImgFig.clear()
+        # Clear point position memory
+        self.circles= []      # [((x0, y0), r0), ((x1, y1), r1), ...]
+        self.pointPos = []    # [(x0, y0), (x1, y1), ...]
+        # Create a fresh image and update the input image
         _defaultInputImage  = self.convert2qPixmap(_defaultImageArray, (__height, __width))
         self.updateInputImage(_defaultInputImage)
         self.updateInputImageFig(self.inputImage)
@@ -223,21 +227,19 @@ class MainWindow(QMainWindow):
 
     def clearOutputImageFig(self):
         self.outputImgFig.clear()
+        # Clear point position memory
+        self.circles_Tr = []  # [((x0, y0), r0), ((x1, y1), r1), ...]
+        # self.pointPos_Tr = [] # [(x0, y0), (x1, y1), ...]
+        # Create a fresh image and update the output image
         _defaultOutputImage = self.convert2qPixmap(_defaultImageArray, (__height, __width))
         self.updateOutputImage(_defaultOutputImage)
         self.updateOutputImageFig(self.outputImage)
 
 
     def clearImages(self): # Clear the canvas - Works only once or twice, fix it!
-        # Clear point position memory
-        self.circles= []      # [((x0, y0), r0), ((x1, y1), r1), ...]
-        self.circles_Tr = []  # [((x0, y0), r0), ((x1, y1), r1), ...]
-        self.pointPos = []    # [(x0, y0), (x1, y1), ...]
-        # self.pointPos_Tr = [] # [(x0, y0), (x1, y1), ...]
 
         # Clear the transformation parameters
         self.resetParameters()
-
         # Clear image modifications
         self.clearInputImageFig()
         self.clearOutputImageFig()
@@ -276,6 +278,7 @@ class MainWindow(QMainWindow):
     def applyTransformation2points(self):
         # self.clearOutputImageFig() # Clear the output image - Does not work as intended, fix it!
         param =  self.updateParameters()
+        self.clearOutputImageFig()
         color_Tr = (0, 255, 0, 127)
         for point in self.pointPos:
             tempPos = tuple(iMan.manipulateP(point, **param))
