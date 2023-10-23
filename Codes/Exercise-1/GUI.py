@@ -14,7 +14,7 @@ import sys # Only needed for access to command line arguments
 app = QApplication(sys.argv)
 
 window = GUI_background.MainWindow()
-window.setWindowTitle("Image Manipulation Tool by Ibrahim Furkan Tezcan  |  v3.0-alpha  |  Release: 15.Oct.2023")
+window.setWindowTitle("Image Manipulation Tool by Ibrahim Furkan Tezcan  |  v3.1-alpha  |  Release: 15.Oct.2023")
 window.show()
 
 app.exec()
