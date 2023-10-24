@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
 
 
         """ Thing commented here, might be added in the next version. """
+        # TODO: Enable user to browse for image. Take its path and load it. 
         # Browse button functionality
         # Browse.clicked.connect(lambda: self.browseImage()) # Browse for image
 
@@ -163,14 +164,8 @@ class MainWindow(QMainWindow):
         widget.setLayout(layout)
 
 
-        # Set the central widget of the Window. Widget will expand
-        # to take up all the space in the window by default.
+        # Set the central widget of the Window. Widget will expand to take up all the space in the window by default.
         self.setCentralWidget(widget)
-
-
-    # [DONE] TODO: Add a widget that will enable user to browse for image. Take its path and load it. 
-    # [DONE] TODO: Add 4 different widgets that will enable user to transform the image. (Move x, Move y, Scale, Rotate)
-    # [DONE] TODO: Add a button that will enable user apply those transformations and see the output image.
 
 
     def browseImage(self):
@@ -334,5 +329,5 @@ class MainWindow(QMainWindow):
          
 
 # [On Hold] TODO: Fix the bug that causes groot to be warped, and others to change colors.
-# TODO: Add the functionality to put circles on the image and transform them as well.
+# [On Hold] TODO: Add the functionality to put circles on the image and transform them as well.
     
