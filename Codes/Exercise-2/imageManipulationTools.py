@@ -40,16 +40,81 @@ class iManipulate:
         return new_point
 
 
-    # def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
+    # def manipulateIm(image:list, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0, channel:int=1) -> list:
+        """
+            manipulateIm(image, tx=0, ty=0, scale_x=1, scale_y=1, angle=0, channel=1)
+            
+        Takes image and transformation parameters as input and returns the transformed image.
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
+        
+        Parameters:
+        --------------------------------
+        image: list
+        tx: float
+        ty: float
+        scale_x: float
+        scale_y: float
+        angle: float (in degrees)
+        channel: int
+        """
     #     pass
 
 
-    # def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use transform and angle
+    def processIm(img:list, kernel:list, channel:int=1, mode:str='') -> list:
+        """
+            processIm(image, kernel, channel=1, mode='')
+            
+        Takes image, kernel, channel, and mode parameters as input and returns the processed image.
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
+        If no mode is selected, it returns the image as it is.
+        
+        The processing operators are:
+        --------------------------------
+        - Gamma correction (point operation)
+        - Prewitt edge detection (neighborhood operation)
+        - DCT (discrete cosine transform) (global operation)
+        
+        Parameters:
+        --------------------------------
+        image: list
+        kernel: list
+        channel: int
+        mode: str
+        """
+        pass
+
+
+    def kernelWrapper(mode:str='', radius:int=1, customKernel:list=[1]) -> list:
+        """
+            kernelWrapper(mode, radius=1, customKernel=[1])
+            
+        Takes mode, radius, and custom kernel as input and returns the desired kernel as a square list.
+        Mode allows a default kernel to be selected. If mode is 'custom', customParameters must be given.
+        # Mode can be 'average', 'gaussian', 'laplacian', 'prewitt', 'sobel', 'roberts', 'scharr', 'custom', or 'none'. # TODO: Add all of them.
+        If no mode is selected or a custom mode is selected but no custom kernel is provided, it returns a kernel that is [1].
+        
+        The pre-defined kernels are:
+        --------------------------------
+        - Gamma correction (point operation)
+        - Prewitt edge detection (neighborhood operation)
+        - DCT (discrete cosine transform) (global operation)
+        
+        Parameters:
+        --------------------------------
+        mode: str
+        radius: int
+        customKernel: list
+        """
+        pass
+
+
+    # def ...(img:list, channel:int=1) -> list:
     #     pass
 
 
-    # def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
+    # def ...(img:list, channel:int=1) -> list:
     #     pass
+
 
 
 class iManipulateCv:
