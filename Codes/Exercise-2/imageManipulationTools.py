@@ -1,6 +1,7 @@
 import argparse
 import cv2 as cv
 import numpy as np
+from numpy.lib.stride_tricks import as_strided as ast
 
 
 class iManipulate:
@@ -44,7 +45,7 @@ class iManipulate:
         """
             manipulateIm(image, tx=0, ty=0, scale_x=1, scale_y=1, angle=0, channel=1)
             
-        Takes image and transformation parameters as input and returns the transformed image.
+        Takes image and transformation parameters as input and returns the transformed image.\n
         If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
         
         Parameters:
@@ -60,13 +61,14 @@ class iManipulate:
     #     pass
 
 
-    def processIm(img:list, kernel:list, channel:int=1, mode:str='') -> list:
+    def processIm(img:list, channel:int=1, mode:str='', radius:int=1, customKernel:list=[1], padding=True) -> list:
         """
-            processIm(image, kernel, channel=1, mode='')
+            processIm(image, channel=1, mode='', radius=1, customKernel=[1])
             
-        Takes image, kernel, channel, and mode parameters as input and returns the processed image.
-        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
-        If no mode is selected, it returns the image as it is.
+        Takes image, channel, mode, kernel radius, custom kernel, and padding as input and returns the processed image.\n
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.\n
+        If no mode is selected, it returns the image as it is.\n
+        If padding is enabled, the output image will not clipped.
         
         The processing operators are:
         --------------------------------
@@ -77,20 +79,29 @@ class iManipulate:
         Parameters:
         --------------------------------
         image: list
-        kernel: list
         channel: int
         mode: str
+        radius: int
+        customKernel: list
+        padding: bool
         """
-        pass
+        kernel = iManipulate.kernelWrapper(mode, radius, customKernel)
+        image  = iManipulate.imageParser(img, channel, radius, padding)
+        processedCh = np.empty(radius)
+        for ch in channel:
+            multiplied_subs = np.einsum('ij,ijkl->ijkl',kernel,image[ch])
+            processedCh[ch] = np.sum(np.sum(multiplied_subs, axis = -radius), axis = -radius)
+        
+        return processedCh
 
 
     def kernelWrapper(mode:str='', radius:int=1, customKernel:list=[1]) -> list:
         """
             kernelWrapper(mode, radius=1, customKernel=[1])
             
-        Takes mode, radius, and custom kernel as input and returns the desired kernel as a square list.
-        Mode allows a default kernel to be selected. If mode is 'custom', customParameters must be given.
-        # Mode can be 'average', 'gaussian', 'laplacian', 'prewitt', 'sobel', 'roberts', 'scharr', 'custom', or 'none'. # TODO: Add all of them.
+        Takes mode, radius, and custom kernel as input and returns the desired kernel as a square list.\n
+        Mode allows a default kernel to be selected. If mode is 'custom', customParameters must be given.\n
+        TODO: Mode can be 'average', 'gaussian', 'laplacian', 'prewitt', 'sobel', 'roberts', 'scharr', 'custom', or 'none'.\n
         If no mode is selected or a custom mode is selected but no custom kernel is provided, it returns a kernel that is [1].
         
         The pre-defined kernels are:
@@ -105,11 +116,47 @@ class iManipulate:
         radius: int
         customKernel: list
         """
-        pass
+        defaultKernel = {  
+
+            '...Gamma':  np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), # I may add radius to change size
+            '...Prewitt':np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), # I may add radius to change size
+            '...DCT':    np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])  # I may add radius to change size
+            # TODO: Define more deault kernels
+
+        }
+        if mode == 'custom':
+            return customKernel
+        else:
+            try:
+                return defaultKernel[mode]
+            except:
+                print("No mode is selected or the selected mode is not defined. Continuing with inactive kernel.")
+                return [1]
+        
 
 
-    # def ...(img:list, channel:int=1) -> list:
-    #     pass
+    def imageParser(img:list, channel:int=1, radius:int=1, padding=True) -> list:
+        """
+            imageParser(image, channel=1, radius=1)
+
+        Takes image, channel, and radius parameters as input and returns the image parsed by radius as a list of lists.\n
+        If channel is 1 (set by default), it returns a parsed grayscale image. If channel is 3, it returns a parsed color image.
+
+        Parameters:
+        --------------------------------
+        image: list
+        channel: int
+        radius: int
+        """
+        image = np.pad(img, radius, mode='constant') if padding else img
+        sub_shape = (radius, radius)
+        parsedCh = np.empty(radius)
+        for ch in channel:
+            temp = tuple(np.subtract(image[ch].shape, sub_shape) + 1) + sub_shape
+            temp2 = ast(image[ch], temp, image[ch].strides * 2)
+            parsedCh[ch] = list(temp2.reshape((-1,) + sub_shape))
+        
+        return parsedCh
 
 
     # def ...(img:list, channel:int=1) -> list:
