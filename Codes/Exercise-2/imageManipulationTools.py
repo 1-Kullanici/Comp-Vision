@@ -41,7 +41,7 @@ class iManipulate:
         return new_point
 
 
-    # def manipulateIm(image:list, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0, channel:int=1) -> list:
+    def manipulateIm(image:list, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0, channel:int=1) -> list:
         """
             manipulateIm(image, tx=0, ty=0, scale_x=1, scale_y=1, angle=0, channel=1)
             
@@ -58,7 +58,9 @@ class iManipulate:
         angle: float (in degrees)
         channel: int
         """
-    #     pass
+        new_image = image
+        print("---------ImgTransform---------\nAdd functionality to manipulateIm() function.")
+        return new_image
 
 
     def processIm(img:list, channel:int=1, mode:str='', radius:int=1, customKernel:list=[1], padding=True) -> list:
