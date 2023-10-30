@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
     QFormLayout,
     QWidget,
     QFileDialog,
+    QMenuBar,
 )
 
 class MainWindow(QMainWindow):
@@ -160,6 +161,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(Clear,              7, 2, 1, 4)
         layout.addWidget(Transform,          8, 2, 1, 4)
 
+        # Create the menu bar
+        self._createMenuBar(layout)
+
         # Set the layout on the application's window
         widget.setLayout(layout)
 
@@ -167,6 +171,51 @@ class MainWindow(QMainWindow):
         # Set the central widget of the Window. Widget will expand to take up all the space in the window by default.
         self.setCentralWidget(widget)
 
+
+    def _createMenuBar(self, layout: QGridLayout):
+        menubar = QMenuBar()
+        layout.addWidget(menubar, 0, 0)
+        # Creating menus
+        fileMenu = menubar.addMenu("File")
+        fileMenu.addAction("New")
+        fileMenu.addAction("Open")
+        fileMenu.addAction("Save")
+        fileMenu.addSeparator()
+        fileMenu.addAction("Quit")
+        
+        editMenu = menubar.addMenu("Edit")
+        editMenu.addAction("Undo")
+        editMenu.addAction("Redo") 
+        editMenu.addSeparator()
+        editMenu.addAction("Cut")
+        editMenu.addAction("Copy")
+        editMenu.addAction("Paste")
+        editMenu.addAction("Delete")
+        editMenu.addSeparator()
+        editMenu.addAction("Select All")
+
+        viewMenu = menubar.addMenu("View")
+        viewMenu.addAction("Zoom In")
+        viewMenu.addAction("Zoom Out")
+        viewMenu.addAction("Fit to Window")
+        viewMenu.addAction("Actual Size")
+        viewMenu.addSeparator()
+        viewMenu.addAction("Show Grid")
+        viewMenu.addAction("Show Info")
+        viewMenu.addAction("Show Histogram")
+        viewMenu.addSeparator()
+        viewMenu.addAction("Show Toolbar")
+        viewMenu.addAction("Show Statusbar")
+
+        toolMenu = menubar.addMenu("Tools")
+        toolMenu.addAction("Image Manipulation Tools")
+        toolMenu.addAction("Image Processing Tools")
+        # ...
+
+        helpMenu = menubar.addMenu("Help")
+        helpMenu.addAction("About")
+        helpMenu.addAction("About Qt")
+        
 
     def browseImage(self):
         self.fileName, _ = QFileDialog.getOpenFileName(None, 'Open a File', '', 'Image files (*.jpg *.png *.jpeg *.bmp *.tif *.tiff)')
