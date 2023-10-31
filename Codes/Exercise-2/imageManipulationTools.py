@@ -97,9 +97,9 @@ class iManipulate:
             channel = channel
             gamma = gamma
             definedModes = {
-                'gamma'   : iProcess.gammaCorrection(img=image, channel=channel, gamma=gamma),
-                'prewitt' : iProcess.prewittEdgeDetection(img=image, channel=channel),
-                'dct'     : iProcess.dct2d(image=image, height=..., width=..., channel=channel) 
+                'gamma'   : iProcess.gammaCorrection(image, gamma),
+                # 'prewitt' : iProcess.prewittEdgeDetection(image), # Takes too long to process
+                'dct'     : iProcess.dct2d(image=image) 
             }
             processedIm = definedModes[mode]
             return processedIm
@@ -116,7 +116,7 @@ class iProcess:
     def __init__(self):
         pass
     
-    def gammaCorrection(self, img:list, channel:int=1, gamma:float=1) -> list:
+    def gammaCorrection(img:list, gamma:float=1) -> list:
         """
             gammaCorrection(image, channel=1, gamma=1)
 
@@ -129,10 +129,19 @@ class iProcess:
         channel: int
         gamma: float
         """
-        gammaCorrectedImg = np.array([np.power(img[ch], gamma) for ch in channel])
+        (row, col, channel) = img.shape
+        gammaCorrectedImg = np.zeros((row, col, channel), dtype=np.uint8)
+        # for r in range(row):
+        #     for c in range(col):
+        #         for ch in range(channel):
+        #             gammaCorrectedImg[r][c][ch] = img[r][c][ch] ** (1/gamma)
+        for ch in range(channel):
+            gammaCorrectedImg[:,:,ch] = img[:,:,ch] ** (1/gamma) 
+            # print(":D")
+        # print(gammaCorrectedImg)
         return gammaCorrectedImg
     
-    def prewittEdgeDetection(self, img:list, channel:int=1) -> list:
+    def prewittEdgeDetection(img:list) -> list:
         """
             prewittEdgeDetection(image, channel=1)
 
@@ -148,24 +157,26 @@ class iProcess:
         Gy = []
         G  = []
         r = 3
+        (row, col, channel) = img.shape
         edge_x = iWrap.kernelWrapper('prewitt_x')
         edge_y = iWrap.kernelWrapper('prewitt_y')
-        parcedImg = iWrap.imageParser(img, channel, radius=r, padding=True)
-        if channel == 1:
-            multiplied_subs = np.einsum('ij,ijkl->ijkl',edge_x,parcedImg)
-            Gx.append(np.sum(np.sum(multiplied_subs, axis = -r), axis = -r))
-            
-        else:
-            for ch in range(channel):
-                dx = np.einsum('ij,ijkl->ijkl',edge_x,parcedImg[ch])
-                Gx.append(np.sum(np.sum(dx, axis = -r), axis = -r))
-                dy = np.einsum('ij,ijkl->ijkl',edge_y,parcedImg[ch])
-                Gy.append(np.sum(np.sum(dy, axis = -r), axis = -r))
-                G.append(np.sqrt(np.power(Gx,2)+np.power(Gy,2)))
+        image  = iWrap.cvIm2List(img, r, padding=True)
+        parcedImg = iWrap.imageParser(image, row, col, channel, radius=r, padding=False)
+        channel = len(parcedImg)
+        (row, col, *_) = parcedImg[0].shape
+        # print(row, col, channel)
+        for ch in range(channel):
+            for i in range(row):
+                for j in range(col):
+                    dx = np.matmul(edge_x,parcedImg[ch][i][j])
+                    Gx.append(np.sum(np.sum(dx, axis = -1), axis = -1))
+                    dy = np.matmul(edge_y,parcedImg[ch][i][j])
+                    Gy.append(np.sum(np.sum(dy, axis = -1), axis = -1))
+                    G.append(np.sqrt(np.power(Gx,2)+np.power(Gy,2)))
 
         return G
 
-    def dct1d(self, x:list, channel:int=1, array_length:int=-1) -> list:
+    def dct1d(x:list, channel:int=1, array_length:int=-1) -> list:
         """
             dct1d(x, channel=1, array_length=-1)
 
@@ -206,7 +217,7 @@ class iProcess:
 
         return m_X
     
-    def dct2d(self, image, height, width, channel=1):
+    def dct2d(image):
         """
             dct2d(image, height, width, channel=1)
 
@@ -222,16 +233,21 @@ class iProcess:
 
         Snippet origin: https://github.com/diegolrs/DCT2D-Digital-Image-Processing.git
         """
-        new_image = []
-        for ch in channel:
+        image = iWrap.cvIm2List(image, padding=False)
+        channel, *_ = image.shape
+        # print(channel)
+        height, width = image[0].shape
+        # print(height, width)
+        new_image = np.empty((channel), dtype=np.ndarray)
+        for ch in range(channel):
             #applying dct1d row by row
             tempArrRow = np.array(image[ch]).tolist()
             for i in range(height):
-                tempArrRow[i] = self.dct1d(tempArrRow[i])
+                tempArrRow[i] = iProcess.dct1d(tempArrRow[i])
             #applying dct1d column by column
             tempArrCol = np.array(tempArrRow)
             for j in range(width):
-                tempArrCol[ :, j] = self.dct1d(tempArrCol[ :, j])
+                tempArrCol[ :, j] = iProcess.dct1d(tempArrCol[ :, j])
 
             new_image.append(tempArrCol)
         return new_image
@@ -241,17 +257,17 @@ class iWrap:
     """
         This class contains wrappers.
     """
+    def __init__(self):
+        pass
 
-    def color_clamped(self, color):
+    def color_clamped(img:list) -> list:
         """
-            color_clamped(color)
-            Takes color as input and returns the clamped color as output.
-
-            Snippet origin: https://github.com/diegolrs/DCT2D-Digital-Image-Processing.git
+            color_clamped(img)
+            Takes image as input and returns normalized image as output.
         """
-        return max(min(color, 255), 0)
+        return np.multiply(img, 255/np.max(img))
 
-    def imageParser(self, img:list, channel:int=1, radius:int=1, padding=True) -> list:
+    def imageParser(img:list, row, col, channel:int=1, radius:int=1, padding=True) -> list:
         """
             imageParser(image, channel=1, radius=1)
 
@@ -264,16 +280,36 @@ class iWrap:
         channel: int
         radius: int
         """
-        image = np.pad(img, radius, mode='constant') if padding else img
+        # image = np.pad(img, radius, mode='constant') if padding else img
+        image = img
         sub_shape = (radius, radius)
-        parsedCh = np.empty(radius)
-        for ch in channel:
+        parsedCh = np.empty((channel), dtype=np.ndarray)
+        for ch in range(channel):
             temp = tuple(np.subtract(image[ch].shape, sub_shape) + 1) + sub_shape
             temp2 = ast(image[ch], temp, image[ch].strides * 2)
-            parsedCh[ch] = list(temp2.reshape((-1,) + sub_shape))
-        
-        return parsedCh 
+            # parsedCh[ch] = (temp2.reshape((-1,) + sub_shape))
+            parsedCh[ch] = temp2
+        # print(parsedCh)
+        return parsedCh
     
+    def cvIm2List(img:list, radius=3, padding=True) -> list:
+        """
+            cvIm2List(image)
+
+        Takes image read by cv2 as input and returns 3 layers of grayscale image as BGR.
+
+        Parameters:
+        --------------------------------
+        image: list
+        """
+        img = np.pad(img, int((radius-1)/2), mode='constant') if padding else img
+        (row, col, channel) = img.shape
+        imgList = np.empty((channel), dtype=np.ndarray)
+        for ch in range(channel):
+            imgList[ch] = img[:,:,ch] 
+        # print(imgList[0])
+        return imgList
+
     def kernelWrapper(type:str='', radius:int=1) -> list:
         """
             kernelWrapper(type, radius=1)
@@ -322,9 +358,8 @@ def main():
     inputImg = cv.imread(imPath)
     (height, width, channel) = inputImg.shape[:3]
     size = (height, width, channel)
-    print(size)
-
-    flag = True
+    # print(size)
+    # print(inputImg)
 
     # Create seperate windows for input image and output image
     cv.namedWindow(in_window_name)
@@ -334,9 +369,12 @@ def main():
     # cv.setMouseCallback("{}".format(in_window_name), iManipulate.draw_circle)
 
     # Show input image and wait for user input
-    while flag:
+    case = 0
+
+    while 1:
         cv.imshow(in_window_name, inputImg)
         cv.waitKey(1)
+        # Test output images
         if cv.waitKey(20) & 0xFF == 27:
             break
 
@@ -350,22 +388,40 @@ def main():
     # iManipulate.showIm(out_window_name, outputImgS)
 
     # Test output images
-    case = 1
-    if case == 1:
-        outputImgG = iManipulate().processIm(img=inputImg, channel=size[2], mode='gamma', gamma=1.5)
-        cv.imshow(out_window_name, outputImgG) 
-        case =+ 1
-    elif case == 2:
-        outputImgP = iManipulate().processIm(img=inputImg, channel=size[2], mode='prewitt')
-        cv.imshow(out_window_name, outputImgP)
-        case =+ 1
-    elif case == 3:
-        outputImgD = iManipulate().processIm(img=inputImg, channel=size[2], mode='dct')
-        cv.imshow(out_window_name, outputImgD)
-        case =+ 1
-    else:
-        flag = False
-        print("Exiting...")
+
+    # Original image
+    # outputImg = iManipulate.processIm(inputImg, size[2], '')
+    # cv.imshow(out_window_name, outputImg)
+    # cv.waitKey(0)
+    # case =+ 1
+
+    # Gamma corrected image
+    print(case)
+    # outputImgG = iManipulate.processIm(inputImg, size[2], 'gamma', gamma=1.5)
+    outputImgG = iProcess.gammaCorrection(inputImg, gamma=1.5)
+    cv.imshow(out_window_name, outputImgG) 
+    cv.imwrite("gammaCorrected.jpg", outputImgG)
+    cv.waitKey(0)
+    case =+ 1
+    
+    # Edge detected image using Prewitt operator (takes too long to process - not recommended to run)
+    print(case)
+    # outputImgP = iProcess.prewittEdgeDetection(inputImg)
+    # cv.imshow(out_window_name, outputImgP)
+    # cv.imwrite("edgeDetected.jpg", outputImgP)
+    # cv.waitKey(0)
+    case =+ 1
+    
+    # DCT of the image
+    print(case)
+    # outputImgD = iManipulate.processIm(inputImg, size[2], 'dct')
+    outputImgD = iProcess.dct2d(inputImg)
+    # cv.imshow(out_window_name, outputImgD)
+    cv.imwrite("dct.jpg", outputImgD)
+    cv.waitKey(0)
+
+    
+    print("Exiting...")
 
 
 
