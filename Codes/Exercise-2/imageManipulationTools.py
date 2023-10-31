@@ -11,7 +11,6 @@ class iManipulate:
     def __init__(self):
         pass
 
-   
     def manipulateP(point:tuple, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0) -> list: 
         """
             manipulateP(point, tx=0, ty=0, scale_x=1, scale_y=1, angle=0)
@@ -40,7 +39,6 @@ class iManipulate:
         new_point = np.array([int(new_point_ext[0]), int(new_point_ext[1])])
         return new_point
 
-
     def manipulateIm(image:list, tx:float=0, ty:float=0, scale_x:float=1, scale_y:float=1, angle:float=0, channel:int=1) -> list:
         """
             manipulateIm(image, tx=0, ty=0, scale_x=1, scale_y=1, angle=0, channel=1)
@@ -62,8 +60,7 @@ class iManipulate:
         print("---------ImgTransform---------\nAdd functionality to manipulateIm() function.")
         return new_image
 
-
-    def processIm(img:list, channel:int=1, mode:str='', radius:int=1, customKernel:list=[1], padding=True) -> list:
+    def processIm(img:list, channel:int=1, mode:str='', radius:int=1, gamma:float=1, padding=True) -> list:
         """
             processIm(image, channel=1, mode='', radius=1, customKernel=[1])
             
@@ -72,11 +69,16 @@ class iManipulate:
         If no mode is selected, it returns the image as it is.\n
         If padding is enabled, the output image will not clipped.
         
-        The processing operators are:
+        Available Modes:
         --------------------------------
-        - Gamma correction (point operation)
-        - Prewitt edge detection (neighborhood operation)
-        - DCT (discrete cosine transform) (global operation)
+        - Linear
+        -- Prewitt edge detection
+
+        - Non-linear
+        -- Gamma correction
+        -- DCT (discrete cosine transform)
+        
+        - Custom
         
         Parameters:
         --------------------------------
@@ -87,57 +89,169 @@ class iManipulate:
         customKernel: list
         padding: bool
         """
-        kernel = iManipulate.kernelWrapper(mode, radius, customKernel)
-        image  = iManipulate.imageParser(img, channel, radius, padding)
-        processedCh = np.empty(radius)
-        for ch in channel:
-            multiplied_subs = np.einsum('ij,ijkl->ijkl',kernel,image[ch])
-            processedCh[ch] = np.sum(np.sum(multiplied_subs, axis = -radius), axis = -radius)
-        
-        return processedCh
+        # Check mode
+        if mode == '':
+            return img
+        else:
+            image = img
+            channel = channel
+            gamma = gamma
+            definedModes = {
+                'gamma'   : iProcess.gammaCorrection(img=image, channel=channel, gamma=gamma),
+                'prewitt' : iProcess.prewittEdgeDetection(img=image, channel=channel),
+                'dct'     : iProcess.dct2d(image=image, height=..., width=..., channel=channel) 
+            }
+            processedIm = definedModes[mode]
+            return processedIm
 
 
-    def kernelWrapper(mode:str='', radius:int=1, customKernel:list=[1]) -> list:
+    # def ...(img:list, channel:int=1) -> list:
+    #     pass
+
+
+class iProcess:
+    """
+        This class contains various image processing methods.
+    """       
+    def __init__(self):
+        pass
+    
+    def gammaCorrection(self, img:list, channel:int=1, gamma:float=1) -> list:
         """
-            kernelWrapper(mode, radius=1, customKernel=[1])
-            
-        Takes mode, radius, and custom kernel as input and returns the desired kernel as a square list.\n
-        Mode allows a default kernel to be selected. If mode is 'custom', customParameters must be given.\n
-        TODO: Mode can be 'average', 'gaussian', 'laplacian', 'prewitt', 'sobel', 'roberts', 'scharr', 'custom', or 'none'.\n
-        If no mode is selected or a custom mode is selected but no custom kernel is provided, it returns a kernel that is [1].
-        
-        The pre-defined kernels are:
-        --------------------------------
-        - Gamma correction (point operation)
-        - Prewitt edge detection (neighborhood operation)
-        - DCT (discrete cosine transform) (global operation)
-        
+            gammaCorrection(image, channel=1, gamma=1)
+
+        Takes image, channel, and gamma parameters as input and returns the gamma corrected image.\n
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
+
         Parameters:
         --------------------------------
-        mode: str
-        radius: int
-        customKernel: list
+        image: list
+        channel: int
+        gamma: float
         """
-        defaultKernel = {  
+        gammaCorrectedImg = np.array([np.power(img[ch], gamma) for ch in channel])
+        return gammaCorrectedImg
+    
+    def prewittEdgeDetection(self, img:list, channel:int=1) -> list:
+        """
+            prewittEdgeDetection(image, channel=1)
 
-            '...Gamma':  np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), # I may add radius to change size
-            '...Prewitt':np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]), # I may add radius to change size
-            '...DCT':    np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]])  # I may add radius to change size
-            # TODO: Define more deault kernels
+        Takes image and channel parameters as input and returns the edge detected image.\n
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
 
-        }
-        if mode == 'custom':
-            return customKernel
+        Parameters:
+        --------------------------------
+        image: list
+        channel: int
+        """
+        Gx = []
+        Gy = []
+        G  = []
+        r = 3
+        edge_x = iWrap.kernelWrapper('prewitt_x')
+        edge_y = iWrap.kernelWrapper('prewitt_y')
+        parcedImg = iWrap.imageParser(img, channel, radius=r, padding=True)
+        if channel == 1:
+            multiplied_subs = np.einsum('ij,ijkl->ijkl',edge_x,parcedImg)
+            Gx.append(np.sum(np.sum(multiplied_subs, axis = -r), axis = -r))
+            
         else:
-            try:
-                return defaultKernel[mode]
-            except:
-                print("No mode is selected or the selected mode is not defined. Continuing with inactive kernel.")
-                return [1]
-        
+            for ch in range(channel):
+                dx = np.einsum('ij,ijkl->ijkl',edge_x,parcedImg[ch])
+                Gx.append(np.sum(np.sum(dx, axis = -r), axis = -r))
+                dy = np.einsum('ij,ijkl->ijkl',edge_y,parcedImg[ch])
+                Gy.append(np.sum(np.sum(dy, axis = -r), axis = -r))
+                G.append(np.sqrt(np.power(Gx,2)+np.power(Gy,2)))
+
+        return G
+
+    def dct1d(self, x:list, channel:int=1, array_length:int=-1) -> list:
+        """
+            dct1d(x, channel=1, array_length=-1)
+
+        Takes a one dimentional array and channel parameters as input and returns the discrete cosine transformed image.\n
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
+
+        Parameters:
+        --------------------------------
+        x: list
+        channel: int
+        array_length: int
+
+        Snippet origin: https://github.com/diegolrs/DCT2D-Digital-Image-Processing.git
+        """
+        if array_length == -1:
+            length = len(x)
+        else:
+            length = array_length
+
+        m_X = [0 for j in range(length)]
+
+        alpha = np.math.pow(2/length, 0.5)
+
+        for k in range(length):
+            if k == 0:
+                ck = np.math.pow(1/2, 1/2)
+            else:
+                ck = 1
+
+            _sum = 0
+
+            for n in range(length):
+                _temp = (np.math.pi * k) / (2*length)
+                _cos = np.math.cos((2*n*_temp) + _temp) 
+                _sum = _sum + (_cos * x[n])
+
+            m_X[k] = alpha * ck * _sum
+
+        return m_X
+    
+    def dct2d(self, image, height, width, channel=1):
+        """
+            dct2d(image, height, width, channel=1)
+
+        Takes a two dimentional array and channel parameters as input and returns the discrete cosine transformed image.\n
+        If channel is 1 (set by default), it returns a grayscale image. If channel is 3, it returns a color image.
+
+        Parameters:
+        --------------------------------
+        image: list
+        height: int
+        width: int
+        channel: int
+
+        Snippet origin: https://github.com/diegolrs/DCT2D-Digital-Image-Processing.git
+        """
+        new_image = []
+        for ch in channel:
+            #applying dct1d row by row
+            tempArrRow = np.array(image[ch]).tolist()
+            for i in range(height):
+                tempArrRow[i] = self.dct1d(tempArrRow[i])
+            #applying dct1d column by column
+            tempArrCol = np.array(tempArrRow)
+            for j in range(width):
+                tempArrCol[ :, j] = self.dct1d(tempArrCol[ :, j])
+
+            new_image.append(tempArrCol)
+        return new_image
 
 
-    def imageParser(img:list, channel:int=1, radius:int=1, padding=True) -> list:
+class iWrap:
+    """
+        This class contains wrappers.
+    """
+
+    def color_clamped(self, color):
+        """
+            color_clamped(color)
+            Takes color as input and returns the clamped color as output.
+
+            Snippet origin: https://github.com/diegolrs/DCT2D-Digital-Image-Processing.git
+        """
+        return max(min(color, 255), 0)
+
+    def imageParser(self, img:list, channel:int=1, radius:int=1, padding=True) -> list:
         """
             imageParser(image, channel=1, radius=1)
 
@@ -158,91 +272,41 @@ class iManipulate:
             temp2 = ast(image[ch], temp, image[ch].strides * 2)
             parsedCh[ch] = list(temp2.reshape((-1,) + sub_shape))
         
-        return parsedCh
-
-
-    # def ...(img:list, channel:int=1) -> list:
-    #     pass
-
-
-
-class iManipulateCv:
-    """
-        This class loads, shows, and manipulates images using OpenCV.
-    """
-    def __init__(self):
-
-        global cursorIndex
-        cursorIndex = []
-
-
-    def loadIm(path):
-        img = cv.imread(path) 
-        # gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        return img, img.shape
-
-
-    def showIm(img, window_name="image"):
-        cv.imshow(img, window_name)
-
-        # waits for user to press any key (this is necessary to avoid Python kernel form crashing)
-        cv.waitKey(0)
-
-
-    def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
-
-        tM = np.float32([[1, 0, tx], [0, 1, ty]]) # Translation matrix
-        newImg = cv.warpAffine(img, tM, (size[1], size[0]))
+        return parsedCh 
+    
+    def kernelWrapper(type:str='', radius:int=1) -> list:
+        """
+            kernelWrapper(type, radius=1)
+            
+        Takes type, radius, and custom kernel as input and returns the desired kernel as a square list.\n
+        Type defines the kernel type desired.
+        If no type is selected it returns identity matrix.
         
-        return newImg
-
-
-    def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and angle
-
-        tM = np.float32([[scale_x, 0, 0], [0, scale_y, 0]]) # Translation matrix
-        newImg = cv.warpAffine(img, tM, (size[1], size[0]))
+        The pre-defined kernels are:
+        --------------------------------
+        - Identity (inactive)                                   - ''
+        - Prewitt edge detection (neighborhood operation)       - prewitt_x, prewitt_y
+        - DCT (discrete cosine transform) (global operation)    - dct
         
-        return newImg
-
-
-    def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
-
-        tM = cv.getRotationMatrix2D((size[1]/2, size[0]/2), angle, 1)
-        newImg = cv.warpAffine(img, tM, (size[1], size[0]))
-        return newImg
-
-
-    # # mouse callback function
-    # def draw_circle(event,x,y,flags, param):
-
-    #     if event == cv.EVENT_LBUTTONDOWN:
-    #         pass
-
-    #     elif event == cv.EVENT_LBUTTONUP:
-    #         cv.circle(img,(x,y),5,(0,0,255),-1)  ########### There is a problem with this line. It does not take img as input. ##############################
-    #         cursorIndex.append([x,y])
-    #         print(cursorIndex)
-
-
-class iManipulateQt:
-    """
-        This class manipulates images using PyQt.
-    """
-    def __init__(self):
-        pass
-
-
-    def translateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use scale and angle
-        pass
-
-
-    def scaleIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and angle
-        pass
-
-
-    def rotateIm(img, size, tx=0, ty=0, scale_x=1, scale_y=1, angle=0): # Don't use tx, ty, and scale
-        pass
-
+        Parameters:
+        --------------------------------
+        type: str
+        radius: int
+        """
+        identityKernel = np.identity(radius)
+        predefinedKernels = {
+            'prewitt_x': np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]]),
+            'prewitt_y': np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]]),
+        }
+        if type == '':
+            return identityKernel
+        else:
+            try:
+                return predefinedKernels[type]
+            except:
+                print("Kernel type not found. Returning identity kernel.")
+                return identityKernel
+            
 
 def main():
 
