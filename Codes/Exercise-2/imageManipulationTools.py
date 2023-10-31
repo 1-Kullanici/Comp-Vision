@@ -319,31 +319,54 @@ def main():
     in_window_name = "inputImage"
     out_window_name = "outputImage"
 
-    inputImg, size = iManipulate.loadIm(imPath)
+    inputImg = cv.imread(imPath)
+    (height, width, channel) = inputImg.shape[:3]
+    size = (height, width, channel)
     print(size)
+
+    flag = True
 
     # Create seperate windows for input image and output image
     cv.namedWindow(in_window_name)
     cv.namedWindow(out_window_name)
 
-    # Set mouse callback function for input image
-    cv.setMouseCallback("{}".format(in_window_name), iManipulate.draw_circle)
+    # # Set mouse callback function for input image
+    # cv.setMouseCallback("{}".format(in_window_name), iManipulate.draw_circle)
 
     # Show input image and wait for user input
-    while 1:
+    while flag:
         cv.imshow(in_window_name, inputImg)
         cv.waitKey(1)
         if cv.waitKey(20) & 0xFF == 27:
             break
 
 
+    # # Test output images
+    # outputImg = iManipulate.translateIm(inputImg, size, 100, -100)
+    # iManipulate.showIm(out_window_name, outputImg)
+    # outputImgR = iManipulate.rotateIm(inputImg, size, 45)
+    # iManipulate.showIm(out_window_name, outputImgR)
+    # outputImgS = iManipulate.scaleIm(inputImg, size, .5, .5)
+    # iManipulate.showIm(out_window_name, outputImgS)
+
     # Test output images
-    outputImg = iManipulate.translateIm(inputImg, size, 100, -100)
-    iManipulate.showIm(out_window_name, outputImg)
-    outputImgR = iManipulate.rotateIm(inputImg, size, 45)
-    iManipulate.showIm(out_window_name, outputImgR)
-    outputImgS = iManipulate.scaleIm(inputImg, size, .5, .5)
-    iManipulate.showIm(out_window_name, outputImgS)
+    case = 1
+    if case == 1:
+        outputImgG = iManipulate().processIm(img=inputImg, channel=size[2], mode='gamma', gamma=1.5)
+        cv.imshow(out_window_name, outputImgG) 
+        case =+ 1
+    elif case == 2:
+        outputImgP = iManipulate().processIm(img=inputImg, channel=size[2], mode='prewitt')
+        cv.imshow(out_window_name, outputImgP)
+        case =+ 1
+    elif case == 3:
+        outputImgD = iManipulate().processIm(img=inputImg, channel=size[2], mode='dct')
+        cv.imshow(out_window_name, outputImgD)
+        case =+ 1
+    else:
+        flag = False
+        print("Exiting...")
+
 
 
 if __name__ == "__main__":
