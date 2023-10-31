@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
     QFormLayout,
     QWidget,
     QFileDialog,
+    QMenuBar,
 )
 
 class MainWindow(QMainWindow):
@@ -32,7 +33,8 @@ class MainWindow(QMainWindow):
         __width = 256
         __height = 256
         # self.default_program_mode = "Drawing Mode! Click browse to load an image."
-        self.default_program_mode = "Drawing Mode! Click on the input image to palce a point." # When tihs changes, change the manipulation tool to iManCV or iManQT.
+        self.mode = 0  # 0: Drawing mode, 1: Image manipulation mode
+        self.default_program_mode = "Drawing Mode! Click on the input image to place a point." # When tihs changes, change the manipulation tool to iManCV or iManQT.
         defaultPath = "No image is loaded!"
         _defaultImageArray = np.zeros((__width,__height,3), np.uint8)
         # self.cv2img = _defaultImageArray.copy()
@@ -78,8 +80,7 @@ class MainWindow(QMainWindow):
         self.outputImgFig.setPixmap(self.outputImage)
 
         # Label/Widget for image manipulaton tools
-        # Browse = QPushButton("...")
-        Browse = QPushButton("Clear!")
+        Browse = QPushButton("Browse...")
         self.programMode = QLabel("{}".format(self.default_program_mode))
         self.programMode.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.imName = QLabel()
@@ -87,6 +88,8 @@ class MainWindow(QMainWindow):
         self.imName.setMinimumWidth(200)
         self.imName.setMaximumWidth(250)
         self.imName.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        Clear = QPushButton("Clear the canvas!")
 
         Move_x = QLabel("Move on x axis")
         self.val_x  = QDoubleSpinBox()
@@ -121,18 +124,16 @@ class MainWindow(QMainWindow):
         # Transform button (Should take all the parameters given and apply transformation)
         Transform = QPushButton("Transform!")
 
-
-        """ Thing commented here, might be added in the next version. """
-        # TODO: Enable user to browse for image. Take its path and load it. 
+ 
         # Browse button functionality
-        # Browse.clicked.connect(lambda: self.browseImage()) # Browse for image
+        Browse.clicked.connect(lambda: self.browseImage()) # Browse for image
+        # self.updatePath("Clear the canvas") # Temporary, will be removed in the next version
 
-        # Browse button functionality (Temporary)
-        self.updatePath("Clear the canvas") # Temporary, will be removed in the next version
-        Browse.clicked.connect(lambda: self.clearImages()) # Clear the canvas
+        # Clear button functionality
+        Clear.clicked.connect(lambda: self.clearImages()) # Clear the canvas
 
         # Transformation button functionality (For points)
-        Transform.clicked.connect(lambda: self.applyTransformation2points()) # Save value of tx and apply transformation
+        Transform.clicked.connect(lambda: self.applyTransformation2image() if self.mode else self.applyTransformation2points()) # Save value of tx and apply transformation
         print("---------START---------\nInitial parameters are: tx: ",
                tx, " ty: ", ty, " scale: ", scale, " angle: ", angle)
         """"""
@@ -157,8 +158,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.val_s,         6, 2, 1, 2)
         layout.addWidget(Rotate,             5, 4, 1, 2)
         layout.addWidget(self.val_r,         6, 4, 1, 2)
-
+        layout.addWidget(Clear,              7, 2, 1, 4)
         layout.addWidget(Transform,          8, 2, 1, 4)
+
+        # Create the menu bar
+        self._createMenuBar(layout)
 
         # Set the layout on the application's window
         widget.setLayout(layout)
@@ -168,11 +172,58 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
 
+    def _createMenuBar(self, layout: QGridLayout):
+        menubar = QMenuBar()
+        layout.addWidget(menubar, 0, 0)
+        # Creating menus
+        fileMenu = menubar.addMenu("File")
+        fileMenu.addAction("New")
+        fileMenu.addAction("Open")
+        fileMenu.addAction("Save")
+        fileMenu.addSeparator()
+        fileMenu.addAction("Quit")
+        
+        editMenu = menubar.addMenu("Edit")
+        editMenu.addAction("Undo")
+        editMenu.addAction("Redo") 
+        editMenu.addSeparator()
+        editMenu.addAction("Cut")
+        editMenu.addAction("Copy")
+        editMenu.addAction("Paste")
+        editMenu.addAction("Delete")
+        editMenu.addSeparator()
+        editMenu.addAction("Select All")
+
+        viewMenu = menubar.addMenu("View")
+        viewMenu.addAction("Zoom In")
+        viewMenu.addAction("Zoom Out")
+        viewMenu.addAction("Fit to Window")
+        viewMenu.addAction("Actual Size")
+        viewMenu.addSeparator()
+        viewMenu.addAction("Show Grid")
+        viewMenu.addAction("Show Info")
+        viewMenu.addAction("Show Histogram")
+        viewMenu.addSeparator()
+        viewMenu.addAction("Show Toolbar")
+        viewMenu.addAction("Show Statusbar")
+
+        toolMenu = menubar.addMenu("Tools")
+        toolMenu.addAction("Image Manipulation Tools")
+        toolMenu.addAction("Image Processing Tools")
+        # ...
+
+        helpMenu = menubar.addMenu("Help")
+        helpMenu.addAction("About")
+        helpMenu.addAction("About Qt")
+        
+
     def browseImage(self):
         self.fileName, _ = QFileDialog.getOpenFileName(None, 'Open a File', '', 'Image files (*.jpg *.png *.jpeg *.bmp *.tif *.tiff)')
         if self.fileName is not None:
             self.updatePath(self.fileName)
             self.loadInputImage(self.fileName)
+            self.programMode.setText("Image Processing Mode!")
+            self.mode = 1 
 
 
     """ Thing here, might be added in the next version. """
@@ -238,7 +289,10 @@ class MainWindow(QMainWindow):
         # Clear image modifications
         self.clearInputImageFig()
         self.clearOutputImageFig()
-
+        # Change the mode to drawing mode
+        self.updatePath("No image is loaded!")
+        self.programMode.setText("Drawing Mode! Click on the input image to place a point.") # When tihs changes, change the manipulation tool to iManCV or iManQT.
+        self.mode = 0
         print("---------CLEARED---------")
 
 
@@ -271,7 +325,6 @@ class MainWindow(QMainWindow):
 
 
     def applyTransformation2points(self):
-        # self.clearOutputImageFig() # Clear the output image - Does not work as intended, fix it!
         param =  self.updateParameters()
         self.clearOutputImageFig()
         color_Tr = (0, 255, 0, 127)
@@ -287,7 +340,15 @@ class MainWindow(QMainWindow):
         print("Transformed points: ", self.circles_Tr)
         self.draw_circles(self.outputImage, self.circles_Tr, color_Tr, output_Image=True)
         self.updateOutputImageFig(self.outputImage)
-        # self.resetParameters() # Reset the input parameters after applying the transformation
+
+
+    def applyTransformation2image(self):
+        # TODO: Make this function a reality.
+        param =  self.updateParameters()
+        self.clearOutputImageFig()
+        imgOut = iMan.manipulateIm(self.inputImage, **param)
+        self.updateOutputImage(imgOut)
+        self.updateOutputImageFig(self.outputImage)
 
 
     def convert2qPixmap(self, imgArray, size):
@@ -313,21 +374,25 @@ class MainWindow(QMainWindow):
     # Define events
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
-            tempPos_x = int(event.position().x())
-            tempPos_y = int(event.position().y())
-            # print("Clicked at the position: ", tempPos_x, tempPos_y)
-            # If the mouse click is inside the input image borders
-            if (tempPos_x > __error_x and tempPos_x < __width + __error_x) and (tempPos_y > __error_y and tempPos_y < __height + __error_y):
-                self.pointPos.append([tempPos_x, tempPos_y])
-                # Add a circle to the list
-                self.circles.append(((tempPos_x, tempPos_y), self.circleRadius))  # (position, radius)
-                # Add the cricle in the image
-                self.draw_circles(self.inputImage, self.circles, output_Image=False)
-                # Redraw the image with the new circle
-                self.updateInputImageFig(self.inputImage)
+        if self.mode:
+            pass
+        else:
+            if event.button() == Qt.MouseButton.LeftButton:
+                tempPos_x = int(event.position().x())
+                tempPos_y = int(event.position().y())
+                # print("Clicked at the position: ", tempPos_x, tempPos_y)
+                # If the mouse click is inside the input image borders
+                if (tempPos_x > __error_x and tempPos_x < __width + __error_x) and (tempPos_y > __error_y and tempPos_y < __height + __error_y):
+                    self.pointPos.append([tempPos_x, tempPos_y])
+                    # Add a circle to the list
+                    self.circles.append(((tempPos_x, tempPos_y), self.circleRadius))  # (position, radius)
+                    # Add the cricle in the image
+                    self.draw_circles(self.inputImage, self.circles, output_Image=False)
+                    # Redraw the image with the new circle
+                    self.updateInputImageFig(self.inputImage)
          
 
 # [On Hold] TODO: Fix the bug that causes groot to be warped, and others to change colors.
 # [On Hold] TODO: Add the functionality to put circles on the image and transform them as well.
+# [On Hold] TODO: Determine the __err_x and __err_y values through calculation to provide shifting of points after the loaded image is cleared.
     
