@@ -10,9 +10,11 @@ def initials(data, k:int, blind:bool):
         print(centers)
         return centers
     else:
-        # Select explicit k points from each class as initial centers
-        # TODO: centers = data.sample(k)
+        print('Not implemented, continuing with blind initialization')
+        # Select random k points as initial centers
+        centers = data.sample(k).values.tolist()
         # centers = data.sample(k, random_state=1)
+        print(centers)
         return centers
 
 
