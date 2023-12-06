@@ -3,6 +3,17 @@ import glob
 import numpy as np
 
 
+
+def parse_files(path: str):
+    """
+    Parse the files in the given path
+    :param path: path of the files
+    :return: list of files
+    """
+    files = glob.glob(path + '*.csv')
+    return files
+
+
 def read_data(path: str):
     """
     Read the data from the given path
@@ -66,10 +77,21 @@ def save_data(data, path: str):
     data.to_csv(path, index=False)
 
 
-
 if __name__ == '__main__':
 
     path = 'Classification Datasets/'
+    files = parse_files(path)
+    for file in files:
+        data = read_data(file)
+        data = null_separator(data)
+        train, test = split_data(data, 0.8)
+
+        filename = file.split('/')[-1].removesuffix('.csv')
+        save_data(train, path + filename + '_train')
+        save_data(test,  path + filename + '_test')
+        print('Saved', path + filename + '_train')
+        print('Saved', path + filename + '_test')
+        
     # data = read_data(path)
     # data = null_separator(path)
     # ...
