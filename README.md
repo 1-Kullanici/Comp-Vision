@@ -5,6 +5,6 @@
 Exercise - 1 ---> 2D Translation\
 Exercise - 2 ---> Image processing\
 Exercise - 3 ---> k-Mean clustering\
-Exercise - 4 ---> ...\
+Exercise - 4 ---> Classification & Regression\
 Exercise - 5 ---> ...\
 Exercise - 6 ---> ...\
