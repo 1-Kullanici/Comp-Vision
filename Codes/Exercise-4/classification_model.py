@@ -11,98 +11,67 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-# def train_model(train, test, target, models = [LogisticRegression, SVC, DecisionTreeClassifier]):
-#     """
-#     Train the model using Logistic Regression
-#     :param train: training data
-#     :param test: testing data
-#     :param target: target variable
-#     :return: trained model
-#     """
-#     for m in models:
-#         model = m.fit(train, target)
-#         prediction = m.predict(test)
-
-#         acc = accuracy_score(test['class'], prediction)
-#         print('Accuracy of', m, 'is', acc)
-
-#         prec = precision_score(test['class'], prediction)
-#         mae = mean_absolute_error(test['class'], prediction)
-#         conf_matrix = confusion_matrix(test['class'], prediction)
-#         r2s = r2_score(test['class'], prediction)
-#         roc = roc_auc_score(test['class'], prediction)
-
-#         results[str(m) + filename] = (acc, prec, mae, conf_matrix, r2s, roc)
-
-#     return model, prediction
-
-
 if __name__ == '__main__':
 
     path = 'Classification Datasets/'
     files = dm.parse_files(path)
     results = {}
-    target = 4
 
     for file in files:
-        data = dm.read_data(file)
-        data = dm.null_separator(data)
-        train, test = dm.split_data(data, 0.8)
-        filename = file.split('/')[-1].removesuffix('.csv')
+        data             = dm.read_data(file)
+        data             = dm.null_separator(data)
+        target           = len(data.columns) - 1
+        print(target)
+         
+        train,   test    = dm.split_data(data,    0.8)
+        x_train, y_train = dm.data_divider(train, target)
+        print(x_train.shape)
+        print(y_train.shape)
+        x_test,  y_test  = dm.data_divider(test,  target)
+        filename         = file.split('/')[-1].removesuffix('.csv')
     
-        model = LogisticRegression.fit(file, file[target])
-        prediction = LogisticRegression.predict(model, test[target])
+        model_1            = LogisticRegression().fit(x_train, y_train)
+        prediction_1       = LogisticRegression.predict(model_1, x_test)
 
-        acc = accuracy_score(test['class'], prediction)
-        mae = mean_absolute_error(test['class'], prediction)
-        conf_matrix = confusion_matrix(test['class'], prediction)
-        r2s = r2_score(test['class'], prediction)
-        # prec = precision_score(test['class'], prediction)
-        # roc = roc_auc_score(test['class'], prediction)
+        acc_1              = accuracy_score(test['class'],        prediction_1)
+        mae_1              = mean_absolute_error(test['class'],   prediction_1)
+        r2s_1              = r2_score(test['class'],              prediction_1)
+        conf_matrix_1      = confusion_matrix(test['class'],      prediction_1)
 
-        results[str(model) + filename] = (acc, mae, conf_matrix, r2s)
+        results[str(model_1) + filename] = (acc_1, mae_1, r2s_1, conf_matrix_1)
 
 
-        # model = SVC.fit(file)
-        # prediction = SVC.predict(model, test)
+        model_2            = SVC().fit(x_train, y_train)
+        prediction_2       = SVC.predict(model_2, x_test)
 
-        # acc = accuracy_score(test['class'], prediction)
-        # prec = precision_score(test['class'], prediction)
-        # mae = mean_absolute_error(test['class'], prediction)
-        # conf_matrix = confusion_matrix(test['class'], prediction)
-        # r2s = r2_score(test['class'], prediction)
-        # roc = roc_auc_score(test['class'], prediction)
+        acc_2              = accuracy_score(test['class'],        prediction_2)
+        mae_2              = mean_absolute_error(test['class'],   prediction_2)
+        r2s_2              = r2_score(test['class'],              prediction_2)
+        conf_matrix_2      = confusion_matrix(test['class'],      prediction_2)
 
-        # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
+        results[str(model_2) + filename] = (acc_2, mae_2, r2s_2, conf_matrix_2)
 
-        # model = DecisionTreeClassifier.fit(file)
-        # prediction = DecisionTreeClassifier.predict(model, test)
+
+        model_3            = DecisionTreeClassifier().fit(x_train, y_train)
+        prediction_3       = DecisionTreeClassifier.predict(model_3, x_test)
+
+        acc_3              = accuracy_score(test['class'],        prediction_3)
+        mae_3              = mean_absolute_error(test['class'],   prediction_3)
+        r2s_3              = r2_score(test['class'],              prediction_3)
+        conf_matrix_3      = confusion_matrix(test['class'],      prediction_3)
         
-        # acc = accuracy_score(test['class'], prediction)
-        # prec = precision_score(test['class'], prediction)
-        # mae = mean_absolute_error(test['class'], prediction)
-        # conf_matrix = confusion_matrix(test['class'], prediction)
-        # r2s = r2_score(test['class'], prediction)
-        # roc = roc_auc_score(test['class'], prediction)
+        results[str(model_3) + filename] = (acc_3, mae_3, r2s_3, conf_matrix_3)
 
-        # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
+        print(results)
 
-
-        # print('Accuracy of', model, 'is', acc)
-        # print('Precision of', model, 'is', prec)
-        # print('Mean Absolute Error of', model, 'is', mae)
-        # print('R2 Score of', model, 'is', r2s)
-        # print('Confusion Matrix of', model, 'is', conf_matrix)
-        # print('ROC AUC Score of', model, 'is', roc)
-
-        fpr, tpr, thresholds = roc_curve(test['class'], prediction)
+        fpr, tpr, thresholds = roc_curve(test['class'], prediction_1)
         plt.plot(fpr, tpr)
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
         plt.title('ROC Curve')
         plt.show()
 
-        dm.save_data(train, path + filename + '_train')
-        dm.save_data(test,  path + filename + '_test')
-        print('Saved', path + filename + '_train')
-        print('Saved', path + filename + '_test')
+        # dm.save_data(train, path + filename + '_train')
+        # dm.save_data(test,  path + filename + '_test')
+        # print('Saved', path + filename + '_train')
+        # print('Saved', path + filename + '_test')

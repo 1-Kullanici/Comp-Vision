@@ -67,6 +67,18 @@ def split_data(data, ratio: float):
     return train, test
 
 
+def data_divider(data, target):
+    """
+    Divide the data into x and y
+    :param data: data to be divided
+    :param target: target column
+    :return: x and y
+    """
+    y = data.iloc[:,[target]]      # (shape is (n, 1), n is the number of rows)
+    x = data.iloc[:,0:target-1]    # Someting wrong (shape should be (n, m), n is the number of rows, m is the number of columns)
+    return x, y
+
+
 def save_data(data, path: str):
     """
     Save the data to the given path
