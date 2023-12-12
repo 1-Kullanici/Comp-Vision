@@ -11,88 +11,89 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def train_model(train, test, target, model):
-    """
-    Train the model using Logistic Regression
-    :param train: training data
-    :param test: testing data
-    :param target: target variable
-    :return: trained model
-    """
-    # model = LogisticRegression()
-    model.fit(train, target)
-    prediction = model.predict(test)
-    return model, prediction
+# def train_model(train, test, target, models = [LogisticRegression, SVC, DecisionTreeClassifier]):
+#     """
+#     Train the model using Logistic Regression
+#     :param train: training data
+#     :param test: testing data
+#     :param target: target variable
+#     :return: trained model
+#     """
+#     for m in models:
+#         model = m.fit(train, target)
+#         prediction = m.predict(test)
+
+#         acc = accuracy_score(test['class'], prediction)
+#         print('Accuracy of', m, 'is', acc)
+
+#         prec = precision_score(test['class'], prediction)
+#         mae = mean_absolute_error(test['class'], prediction)
+#         conf_matrix = confusion_matrix(test['class'], prediction)
+#         r2s = r2_score(test['class'], prediction)
+#         roc = roc_auc_score(test['class'], prediction)
+
+#         results[str(m) + filename] = (acc, prec, mae, conf_matrix, r2s, roc)
+
+#     return model, prediction
 
 
 if __name__ == '__main__':
 
     path = 'Classification Datasets/'
     files = dm.parse_files(path)
-    models = [LogisticRegression, SVC, DecisionTreeClassifier]
     results = {}
+    target = 4
 
     for file in files:
         data = dm.read_data(file)
         data = dm.null_separator(data)
         train, test = dm.split_data(data, 0.8)
         filename = file.split('/')[-1].removesuffix('.csv')
+    
+        model = LogisticRegression.fit(file, file[target])
+        prediction = LogisticRegression.predict(model, test[target])
 
-        for m in models:
-            model, prediction = train_model(train, test, train['class'], m)
-            acc = accuracy_score(test['class'], prediction)
+        acc = accuracy_score(test['class'], prediction)
+        mae = mean_absolute_error(test['class'], prediction)
+        conf_matrix = confusion_matrix(test['class'], prediction)
+        r2s = r2_score(test['class'], prediction)
+        # prec = precision_score(test['class'], prediction)
+        # roc = roc_auc_score(test['class'], prediction)
 
-            print('Accuracy of', m, 'is', acc)
-            prec = precision_score(test['class'], prediction)
-            mae = mean_absolute_error(test['class'], prediction)
-            conf_matrix = confusion_matrix(test['class'], prediction)
-            r2s = r2_score(test['class'], prediction)
-            roc = roc_auc_score(test['class'], prediction)
-
-            results[str(m) + filename] = (acc, prec, mae, conf_matrix, r2s, roc)
-            # model = LogisticRegression.fit(file)
-            # prediction = LogisticRegression.predict(model, test)
-
-            # acc = accuracy_score(test['class'], prediction)
-            # prec = precision_score(test['class'], prediction)
-            # mae = mean_absolute_error(test['class'], prediction)
-            # conf_matrix = confusion_matrix(test['class'], prediction)
-            # r2s = r2_score(test['class'], prediction)
-            # roc = roc_auc_score(test['class'], prediction)
-
-            # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
-
-            # model = SVC.fit(file)
-            # prediction = SVC.predict(model, test)
-
-            # acc = accuracy_score(test['class'], prediction)
-            # prec = precision_score(test['class'], prediction)
-            # mae = mean_absolute_error(test['class'], prediction)
-            # conf_matrix = confusion_matrix(test['class'], prediction)
-            # r2s = r2_score(test['class'], prediction)
-            # roc = roc_auc_score(test['class'], prediction)
-
-            # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
-
-            # model = DecisionTreeClassifier.fit(file)
-            # prediction = DecisionTreeClassifier.predict(model, test)
-            
-            # acc = accuracy_score(test['class'], prediction)
-            # prec = precision_score(test['class'], prediction)
-            # mae = mean_absolute_error(test['class'], prediction)
-            # conf_matrix = confusion_matrix(test['class'], prediction)
-            # r2s = r2_score(test['class'], prediction)
-            # roc = roc_auc_score(test['class'], prediction)
-
-            # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
+        results[str(model) + filename] = (acc, mae, conf_matrix, r2s)
 
 
-            # print('Accuracy of', model, 'is', acc)
-            # print('Precision of', model, 'is', prec)
-            # print('Mean Absolute Error of', model, 'is', mae)
-            # print('R2 Score of', model, 'is', r2s)
-            # print('Confusion Matrix of', model, 'is', conf_matrix)
-            # print('ROC AUC Score of', model, 'is', roc)
+        # model = SVC.fit(file)
+        # prediction = SVC.predict(model, test)
+
+        # acc = accuracy_score(test['class'], prediction)
+        # prec = precision_score(test['class'], prediction)
+        # mae = mean_absolute_error(test['class'], prediction)
+        # conf_matrix = confusion_matrix(test['class'], prediction)
+        # r2s = r2_score(test['class'], prediction)
+        # roc = roc_auc_score(test['class'], prediction)
+
+        # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
+
+        # model = DecisionTreeClassifier.fit(file)
+        # prediction = DecisionTreeClassifier.predict(model, test)
+        
+        # acc = accuracy_score(test['class'], prediction)
+        # prec = precision_score(test['class'], prediction)
+        # mae = mean_absolute_error(test['class'], prediction)
+        # conf_matrix = confusion_matrix(test['class'], prediction)
+        # r2s = r2_score(test['class'], prediction)
+        # roc = roc_auc_score(test['class'], prediction)
+
+        # results[str(models[i] + filename)] = (acc, prec, mae, conf_matrix, r2s, roc)
+
+
+        # print('Accuracy of', model, 'is', acc)
+        # print('Precision of', model, 'is', prec)
+        # print('Mean Absolute Error of', model, 'is', mae)
+        # print('R2 Score of', model, 'is', r2s)
+        # print('Confusion Matrix of', model, 'is', conf_matrix)
+        # print('ROC AUC Score of', model, 'is', roc)
 
         fpr, tpr, thresholds = roc_curve(test['class'], prediction)
         plt.plot(fpr, tpr)
