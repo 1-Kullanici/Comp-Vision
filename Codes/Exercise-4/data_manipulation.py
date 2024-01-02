@@ -67,6 +67,35 @@ def split_data(data, ratio: float):
     return train, test
 
 
+def change_column(data, column, target_column):
+    """
+    Move the column to the target column index
+    :param data: data to be changed
+    :param column: column to be moved
+    :param target_column: target column index
+    :return: changed data
+    """
+    temp_col = data[column]
+    data.pop(column)
+    data.insert(target_column, column, temp_col)
+    return data
+
+
+def string_to_int(data, column):
+    """
+    Convert the string values to int values
+    :param data: data to be converted
+    :param column: column to be converted
+    :param map: mapping of the values
+    :return: converted data
+    """
+    mapDict = {}
+    for i, value in enumerate(data[column].unique()):
+        mapDict[value] = i
+    data[column] = data[column].map(mapDict)
+    return data, mapDict
+
+
 def data_divider(data, target):
     """
     Divide the data into x and y
