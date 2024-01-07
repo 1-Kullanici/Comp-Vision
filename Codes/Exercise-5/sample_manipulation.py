@@ -105,7 +105,7 @@ def dividor(main_folder, sub_folder, ratio):
         return None, None, None
 
     path_to_train = main_folder + sub_folder + 'train' + '/' 
-    path_to_test = main_folder + sub_folder + 'test' + '/'
+    path_to_test  = main_folder + sub_folder + 'test'  + '/'
 
     # Check if train and test folders exist
     flag = make_directory(path_to_train)
