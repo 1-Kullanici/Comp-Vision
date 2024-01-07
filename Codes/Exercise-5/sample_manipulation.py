@@ -77,10 +77,10 @@ def parse_files(path: str):
 
 def split_files(files, ratio: float, path_to_file:str, path_to_move: str):
     """
-    Split the data into train and test sets
+    Split the data into train and validate sets
     :param data: data to be split
     :param ratio: ratio of the split
-    :return: train and test sets
+    :return: train and validate sets
     """
 
     max_range = int(np.round(len(files) * ratio))
@@ -105,14 +105,14 @@ def dividor(main_folder, sub_folder, ratio):
         return None, None, None
 
     path_to_train = main_folder + sub_folder + 'train' + '/' 
-    path_to_test  = main_folder + sub_folder + 'test'  + '/'
+    path_to_validate  = main_folder + sub_folder + 'validate'  + '/'
 
-    # Check if train and test folders exist
+    # Check if train and validate folders exist
     flag = make_directory(path_to_train)
     if flag:
         print('The dataset is separated already!')
         folders = parse_folders(path_to_train)
-        return folders, path_to_train, path_to_test
+        return folders, path_to_train, path_to_validate
 
     # Seperate train data and store in train folder
     for folder in folders:
@@ -122,13 +122,13 @@ def dividor(main_folder, sub_folder, ratio):
             print(f'Could not move files to {path_to_train + folder}/')
             break
     
-    # Move the rest of the data to test folder
+    # Move the rest of the data to validate folder
     ratio = 1
     for folder in folders:
         files = parse_files(path + folder + '/')
-        flag = split_files(files, ratio, path + folder + '/', path_to_test + folder + '/')
+        flag = split_files(files, ratio, path + folder + '/', path_to_validate + folder + '/')
         if flag:
-            print(f'Could not move files to {path_to_test + folder}/')
+            print(f'Could not move files to {path_to_validate + folder}/')
             break
     
     # Check any errors
@@ -139,10 +139,10 @@ def dividor(main_folder, sub_folder, ratio):
 
         # Finished!
         print('Done!')
-        return folders, path_to_train, path_to_test
+        return folders, path_to_train, path_to_validate
     else:
         print('Done with errors!')
-        return folders, path_to_train, path_to_test
+        return folders, path_to_train, path_to_validate
 
 
 if __name__ == '__main__':
@@ -150,4 +150,4 @@ if __name__ == '__main__':
     main_folder = 'Classification Datasets/'
     sub_folder = 'apple-dataset/'
     ratio = 0.8
-    categories, train_path, test_path = dividor(main_folder, sub_folder, ratio)
+    categories, train_path, validate_path = dividor(main_folder, sub_folder, ratio)

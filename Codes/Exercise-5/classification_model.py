@@ -35,7 +35,23 @@ def pre_process(Categories, datadir): # Example: Categories=['apple','banana','o
         print(f'loaded category:{i} successfully') 
     flat_data = np.array(flat_data_arr) 
     target    = np.array(target_arr)
-    return flat_data, target
+
+    # Make dataframe 
+    df = pd.DataFrame(flat_data)  
+    df['Target'] = target 
+    print('Dataframe shape is: ', df.shape, '. (# of images, # of features "or pixels in the image" + 1 "which is the target").')
+
+    #input data  - the features (x)
+    x = df.iloc[:,:-1]  
+    #output data - the target   (y) 
+    y = df.iloc[:,-1]
+
+    # Splitting the data into training and testing sets 
+    x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.20, 
+                                                     random_state=77, 
+                                                     stratify=y)
+    
+    return x_train,x_test,y_train,y_test
 
 
 
@@ -46,51 +62,32 @@ if __name__ == '__main__':
     sub_folder = 'apple-dataset/'            # Last portion of the path
     ratio = 0.8                              # The ratio of train data among all data
 
-    # Seperate the dataset into train and test. Get the categories and paths to seperated data.
-    categories, train_path, test_path = sm.dividor(main_folder, sub_folder, ratio)
-    flat_data, target = pre_process(categories, train_path)
 
-    # Make dataframe 
-    df = pd.DataFrame(flat_data)  
-    df['Target'] = target 
-    print('Dataframe shape is: ', df.shape, '. (# of images, # of features + 1 "which is the target").')
+    # Pre-processing the data
+    categories, train_path, validate_path = sm.dividor(main_folder, sub_folder, ratio) # Seperate the dataset into train and validate.
+    x_train,x_test,y_train,y_test     = pre_process(categories, train_path)            # Pre-process the train data
 
-    #input data  
-    x = df.iloc[:,:-1]  
-    #output data 
-    y = df.iloc[:,-1]
 
-    # Splitting the data into training and testing sets 
-    x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.20, 
-                                                     random_state=77, 
-                                                     stratify=y) 
+    # Preparing the model
+    param_grid = {'C':[0.1,1,10,100], 'gamma':[0.0001,0.001,0.1,1], 
+                  'kernel':['rbf','poly']}    # Defining the parameters grid for GridSearchCV 
+    svc = SVC(probability=True)               # Creating a support vector classifier 
+    model = GridSearchCV(svc,param_grid)      # Creating a model using GridSearchCV with the parameters grid 
 
-    # Defining the parameters grid for GridSearchCV 
-    param_grid = {'C':[0.1,1,10,100], 
-                  'gamma':[0.0001,0.001,0.1,1], 
-                  'kernel':['rbf','poly']} 
 
-    # Creating a support vector classifier 
-    svc = SVC(probability=True) 
+    # Training and testing the model
+    model.fit(x_train,y_train)     # Training the model using the pre-processed training data 
+    y_pred = model.predict(x_test) # Testing the model using the pre-processed testing data 
 
-    # Creating a model using GridSearchCV with the parameters grid 
-    model = GridSearchCV(svc,param_grid)
 
-    # Training the model using the training data 
-    model.fit(x_train,y_train)
-
-    # Testing the model using the testing data 
-    y_pred = model.predict(x_test) 
-
-    # Calculating the accuracy of the model 
+    # Evaluating the model
     accuracy = accuracy_score(y_pred, y_test) 
-
-    # Print the accuracy and the classification report of the model 
     print(f"The model is {accuracy*100}% accurate")
     print(classification_report(y_test, y_pred, target_names=categories))
 
-    # Predicting the category of an image from test data
-    path = test_path + categories[0] + '/'
+
+    # Predicting the category of an image from validation data
+    path = validate_path + categories[0] + '/'
     img=imread(path + os.listdir(path)[0]) 
     plt.imshow(img) 
     plt.show() 
