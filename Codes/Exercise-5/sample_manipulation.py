@@ -14,7 +14,7 @@ def make_directory(path: str):
         os.makedirs(path)
         return False
     else:
-        print('Directory already exists!')
+        # print('Directory already exists!')
         return True
 
 
@@ -38,10 +38,12 @@ def move_file(path_to_file: str, path_to_move: str):
     :param path_to_move: path to move
     :return: None
     """
-    if not os.path.exists(path_to_move):
+    try:
         shutil.move(path_to_file, path_to_move)
-    else:
-        print('Directory already exists!')
+        return False
+    except:
+        print('Could not move file!')
+        return True
 
 
 def parse_folders(path: str):
@@ -50,13 +52,17 @@ def parse_folders(path: str):
     :param path: path of the files
     :return: list of files
     """
-    all_entries = os.listdir(path)
-    for entry in all_entries:
-        if os.path.isfile(entry):
-            all_entries.remove(entry)
-            # print('Removed', entry)        
-    # print(all_entries)
-    return all_entries
+    try:
+        all_entries = os.listdir(path)
+        for entry in all_entries:
+            if os.path.isfile(entry):
+                all_entries.remove(entry)
+                # print('Removed', entry)        
+        # print(all_entries)
+        return all_entries
+    except:
+        print('No such directory exists!')
+        return None
 
 
 def parse_files(path: str):
@@ -81,26 +87,67 @@ def split_files(files, ratio: float, path_to_file:str, path_to_move: str):
     flag = make_directory(path_to_move)
     if flag:
         print('Files already moved!')
-        return
+        return True
     else:
         for i in range(max_range):
-            shutil.move(files[i], path_to_move)
+            flag = move_file(files[i], path_to_move)
+            if flag:
+                return True
+        return False
 
     
 def dividor(main_folder, sub_folder, ratio):
     path = main_folder + sub_folder
     folders = parse_folders(path)
+
+    if folders is None:
+        print('Invalid path!')
+        return None, None, None
+
+    path_to_train = main_folder + sub_folder + 'train' + '/' 
+    path_to_test = main_folder + sub_folder + 'test' + '/'
+
+    # Check if train and test folders exist
+    flag = make_directory(path_to_train)
+    if flag:
+        print('The dataset is separated already!')
+        folders = parse_folders(path_to_train)
+        return folders, path_to_train, path_to_test
+
+    # Seperate train data and store in train folder
     for folder in folders:
         files = parse_files(path + folder + '/')
-        split_files(files, ratio, path + folder + '/', main_folder + sub_folder.split('/')[0] + '-train' + '/' + folder + '/') 
-    rename_file(path, main_folder + sub_folder.split('/')[0] + '-test')
-    print('Done!')
+        flag = split_files(files, ratio, path + folder + '/', path_to_train + folder + '/')
+        if flag:
+            print(f'Could not move files to {path_to_train + folder}/')
+            break
+    
+    # Move the rest of the data to test folder
+    ratio = 1
+    for folder in folders:
+        files = parse_files(path + folder + '/')
+        flag = split_files(files, ratio, path + folder + '/', path_to_test + folder + '/')
+        if flag:
+            print(f'Could not move files to {path_to_test + folder}/')
+            break
+    
+    # Check any errors
+    if not flag:
+        # Remove excess folders
+        for folder in folders:
+            shutil.rmtree(path+ folder + '/')
 
+        # Finished!
+        print('Done!')
+        return folders, path_to_train, path_to_test
+    else:
+        print('Done with errors!')
+        return folders, path_to_train, path_to_test
 
 
 if __name__ == '__main__':
 
     main_folder = 'Classification Datasets/'
-    sub_folder = 'apple-dataset-test/'
+    sub_folder = 'apple-dataset/'
     ratio = 0.8
-    dividor(main_folder, sub_folder, ratio)
+    categories, train_path, test_path = dividor(main_folder, sub_folder, ratio)
