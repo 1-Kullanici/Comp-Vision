@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # Pre-processing the data
     categories, train_path, validate_path = sm.dividor(main_folder, sub_folder, ratio) # Seperate the dataset into train and validate.
-    x_train,x_test,y_train,y_test     = pre_process(categories, train_path)            # Pre-process the train data
+    x_train,x_test,y_train,y_test         = pre_process(categories, train_path)        # Pre-process the train data
 
 
     # Preparing the model
@@ -88,15 +88,15 @@ if __name__ == '__main__':
 
     # Predicting the category of an image from validation data
     path = validate_path + categories[0] + '/'
-    img=imread(path + os.listdir(path)[0]) 
+    img  = imread(path + os.listdir(path)[0]) 
     plt.imshow(img) 
     plt.show() 
-    img_resize=resize(img,(150,150,3)) 
-    l=[img_resize.flatten()] 
-    probability=model.predict_proba(l) 
+    img_resize = resize(img,(150,150,3)) 
+    l = [img_resize.flatten()] 
+    probability = model.predict_proba(l) 
     for ind,val in enumerate(categories): 
         print(f'{val} = {probability[0][ind]*100}%') 
-    print("The predicted image is : "+ categories[model.predict(l)[0]])
+    print("The selected image is :" + categories[0] + ". The predicted image is : " + categories[model.predict(l)[0]] + ".")
 
 
 
