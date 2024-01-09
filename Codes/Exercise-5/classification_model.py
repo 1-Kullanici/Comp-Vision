@@ -54,8 +54,6 @@ def pre_process(Categories, datadir): # Example: Categories=['apple','banana','o
     return x_train,x_test,y_train,y_test
 
 
-
-
 if __name__ == '__main__':
     # Define path to the dataset and the ratio to split the dataset. Ratio is the percentage of train data.
     main_folder = 'Classification Datasets/' # Path except the last portion
@@ -71,8 +69,8 @@ if __name__ == '__main__':
     # Preparing the model
     param_grid = {'C':[0.1,1,10,100], 'gamma':[0.0001,0.001,0.1,1], 
                   'kernel':['rbf','poly']}    # Defining the parameters grid for GridSearchCV 
-    svc = SVC(probability=True)               # Creating a support vector classifier 
-    model = GridSearchCV(svc,param_grid)      # Creating a model using GridSearchCV with the parameters grid 
+    svc   = SVC(probability=True)             # Creating a support vector classifier 
+    model = GridSearchCV(svc,param_grid,cv=5) # Creating a model using GridSearchCV with the parameters grid 
 
 
     # Training and testing the model
