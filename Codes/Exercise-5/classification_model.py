@@ -39,7 +39,7 @@ def pre_process(Categories, datadir): # Example: Categories=['apple','banana','o
     # Make dataframe 
     df = pd.DataFrame(flat_data)  
     df['Target'] = target 
-    print('Dataframe shape is: ', df.shape, '. (# of images, # of features "or pixels in the image" + 1 "which is the target").')
+    print('Dataframe shape is: ' + df.shape + '. (# of images, # of features "or pixels in the image" + 1 "which is the target").')
 
     #input data  - the features (x)
     x = df.iloc[:,:-1]  
