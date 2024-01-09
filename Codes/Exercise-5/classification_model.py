@@ -99,9 +99,3 @@ if __name__ == '__main__':
     print("The selected image is :" + categories[0] + ". The predicted image is : " + categories[model.predict(l)[0]] + ".")
 
 
-
-
-
-
-
-
