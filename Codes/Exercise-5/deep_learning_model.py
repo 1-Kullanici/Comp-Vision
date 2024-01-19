@@ -32,7 +32,8 @@ class CustomImageDataset(Dataset):
             label = self.target_transform(label)
         return image, label
     
-
+# Note: The function may not stack images to tensors as I intended. 
+# Check the tensor structure and debug tihs part. Check if the "data" in this function matches the tensor structure. 
 def pre_process(Categories, datadir, transform=None):
     data_arr      = [] #input array  (x)
     target_arr    = [] #output array (y)
